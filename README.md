@@ -9,6 +9,7 @@ Next.js 16 + React 19 + Supabaseを使用したWebアプリケーション
 - **React 19.2**
 - **TypeScript 5**
 - **Tailwind CSS 4**
+- **shadcn/ui** - UIコンポーネントライブラリ
 
 ### バックエンド
 - **Supabase** (認証・データベース)
@@ -62,20 +63,30 @@ peer-search-re/
 │   ├── layout.tsx            # ルートレイアウト
 │   ├── page.tsx              # ホームページ
 │   └── globals.css           # グローバルスタイル
+├── components/
+│   └── ui/                   # shadcn/ui コンポーネント
 ├── lib/
-│   └── supabase-auth/        # Supabase認証関連
-│       ├── auth.ts           # 認証ユーティリティ
-│       ├── authGoogle.ts     # Google認証
-│       ├── middleware.ts     # 認証ミドルウェア
-│       └── server.ts         # サーバーサイド認証
+│   ├── supabase-auth/        # Supabase認証関連
+│   │   ├── auth.ts           # 認証ユーティリティ
+│   │   ├── authGoogle.ts     # Google認証
+│   │   ├── middleware.ts     # 認証ミドルウェア
+│   │   └── server.ts         # サーバーサイド認証
+│   └── utils.ts              # ユーティリティ関数 (cn等)
 ├── db/
 │   ├── schema.ts             # Drizzleスキーマ定義
 │   └── index.ts              # DB接続設定
 ├── middleware.ts             # Next.jsミドルウェア (認証チェック)
+├── tailwind.config.ts        # Tailwind CSS設定
+├── components.json           # shadcn/ui設定
 └── drizzle.config.ts         # Drizzle設定
 ```
 
 ## 主要機能
+
+### UI コンポーネント
+- shadcn/ui による再利用可能なコンポーネント
+- Tailwind CSS 4 ベースのスタイリング
+- ダークモード対応
 
 ### 認証
 - Supabase + Google OAuth認証
@@ -116,6 +127,9 @@ pnpm db:push
 
 # Drizzle Studio起動 (DBのGUI管理)
 pnpm db:studio
+
+# shadcn/uiコンポーネント追加
+pnpm dlx shadcn@latest add [component-name]
 ```
 
 ## コーディング規約
@@ -123,6 +137,50 @@ pnpm db:studio
 - **リンター/フォーマッター**: Biomeを使用
 - **プレコミット**: Huskyによる自動リント・フォーマット
 - コミット前に自動的に`biome check --write`が実行されます
+
+## shadcn/ui の使い方
+
+### コンポーネントの追加
+
+shadcn/uiのコンポーネントは必要に応じて追加します：
+
+```bash
+# 単一コンポーネント
+pnpm dlx shadcn@latest add button
+
+# 複数コンポーネント
+pnpm dlx shadcn@latest add card input label dialog
+```
+
+### 使用例
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function Example() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>タイトル</CardTitle>
+        <CardDescription>説明文</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button>クリック</Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### インストール済みコンポーネント
+
+- `button` - ボタン
+- `card` - カード
+- `input` - 入力フィールド
+- `label` - ラベル
+
+その他のコンポーネントは[shadcn/ui公式サイト](https://ui.shadcn.com/docs/components)から確認できます。
 
 ## データベース管理
 
