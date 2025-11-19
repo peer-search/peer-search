@@ -48,3 +48,6 @@ next-env.d.ts
 
 # drizzle
 /drizzle
+
+# playwright mcp
+.playwright-mcp/
