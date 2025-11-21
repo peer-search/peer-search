@@ -51,7 +51,7 @@
   - _完了: lib/organizations/tree.ts に実装済み（O(n)の効率的なアルゴリズム）_
 
 ### 3. UI コンポーネントの実装
-- [ ] 3.1 (P) 組織カードコンポーネントの実装
+- [x] 3.1 (P) 組織カードコンポーネントの実装
   - `OrganizationCard`コンポーネントを作成する
   - shadcn/ui `Card`, `CardTitle`, `CardContent`を使用する
   - Next.js `Link`で`/employees?org_id={node.id}`へのナビゲーションを実装する
@@ -59,8 +59,9 @@
   - ホバー・フォーカス時のスタイルをTailwind CSSで実装する（`hover:shadow-lg`, `focus:outline`）
   - ARIA属性を追加する（`aria-label`）
   - _Requirements: 3.1, 3.3, 3.4, 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4_
+  - _完了: components/organization/organization-card.tsx に実装済み_
 
-- [ ] 3.2 (P) 組織カードリストコンポーネントの実装
+- [x] 3.2 (P) 組織カードリストコンポーネントの実装
   - `OrganizationCardList`コンポーネントを作成する
   - `OrganizationTree[]`をPropsとして受け取る
   - `map()`で各ノードを`OrganizationCard`としてレンダリングする
@@ -68,6 +69,7 @@
   - Tailwind CSSでレスポンシブグリッドレイアウトを実装する（`grid`, `grid-cols-1`, `md:grid-cols-2`, `lg:grid-cols-3`, `gap-4`）
   - 空配列の場合は「組織データがありません」メッセージを表示する
   - _Requirements: 3.2, 3.3, 3.5, 3.6, 8.1, 8.2, 8.3, 8.4_
+  - _完了: components/organization/organization-card-list.tsx に実装済み_
 
 ### 4. トップページの実装
 - [ ] 4.1 組織階層ページの実装
