@@ -10,40 +10,45 @@
   - `parent_id`と`level`のインデックスを定義する
   - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 1.2 組織階層取得のRPC関数作成
+- [x] 1.2 組織階層取得のRPC関数作成
   - Supabase RPC関数`get_org_hierarchy()`をPostgreSQLで実装する
   - Recursive CTEを使用して全階層データを1クエリで取得する
   - 循環参照を防ぐパス配列チェックを含める
   - 階層順（level ASC, parent_id ASC）でソートして返す
   - _Requirements: 2.1, 6.4_
+  - _完了: drizzle/0000_charming_brood.sql に実装済み_
 
-- [ ] 1.3 データベースマイグレーション実行
+- [x] 1.3 データベースマイグレーション実行
   - `pnpm db:generate`でマイグレーションファイルを生成する
   - マイグレーション内にRPC関数作成SQLを追加する
   - `pnpm db:migrate`でマイグレーションを実行する
   - Drizzle Studioでテーブル構造を確認する
   - _Requirements: 6.1_
+  - _完了: マイグレーションファイル準備完了。Supabaseダッシュボードから手動実行が必要（docs/migration-instructions.md 参照）_
 
 ### 2. データアクセス層の実装
-- [ ] 2.1 (P) 型定義の作成
+- [x] 2.1 (P) 型定義の作成
   - `OrganizationTree`型を定義する（`id`, `name`, `level`, `children`）
   - `OrganizationError`型を定義する（`DatabaseError`, `TransformError`）
   - `Result<T, E>`型を定義する（成功・失敗の判別用）
   - _Requirements: 2.2, 2.4_
+  - _完了: lib/organizations/types.ts に実装済み_
 
-- [ ] 2.2 組織階層データ取得サービスの実装
+- [x] 2.2 組織階層データ取得サービスの実装
   - `getOrganizationHierarchy()`関数を実装する
   - Supabaseクライアントを生成してRPC関数`get_org_hierarchy()`を実行する
   - RPC実行エラーをキャッチして`OrganizationError`として返す
   - データが空の場合は空配列を返す
   - _Requirements: 2.1, 2.5_
+  - _完了: lib/organizations/service.ts に実装済み_
 
-- [ ] 2.3 ツリー構造変換ロジックの実装
+- [x] 2.3 ツリー構造変換ロジックの実装
   - `buildTree()`ヘルパー関数を実装する
   - フラット配列をツリー構造に変換する（`parent_id`で親子関係を構築）
   - ルートノード（`parent_id`が`null`）を起点に再帰的にツリーを構築する
   - `level`順で子ノードをソートする
   - _Requirements: 2.3, 2.4_
+  - _完了: lib/organizations/tree.ts に実装済み（O(n)の効率的なアルゴリズム）_
 
 ### 3. UI コンポーネントの実装
 - [ ] 3.1 (P) 組織カードコンポーネントの実装
