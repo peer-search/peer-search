@@ -72,30 +72,34 @@
   - _完了: components/organization/organization-card-list.tsx に実装済み_
 
 ### 4. トップページの実装
-- [ ] 4.1 組織階層ページの実装
+- [x] 4.1 組織階層ページの実装
   - `/app/page.tsx`を置き換える形で実装する
   - React Server Componentとして非同期関数で定義する
   - `getOrganizationHierarchy()`を`await`で呼び出す
   - 結果が成功の場合は`OrganizationCardList`にデータを渡す
   - 結果が失敗の場合はエラーをスローする（Next.js error boundaryでキャッチ）
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.5_
+  - _完了: app/page.tsx に実装済み。動的レンダリング設定済み。ビルド成功。_
 
-- [ ] 4.2 (P) ページメタデータの設定
+- [x] 4.2 (P) ページメタデータの設定
   - Next.js `metadata` APIを使用してSEOメタデータを定義する
   - `title`を設定する（例: 「組織階層」）
   - `description`を設定する（例: 「会社・本部・部署・課／チームの組織階層を表示します」）
   - _Requirements: 9.3, 9.4_
+  - _完了: app/page.tsx に metadata エクスポートを追加。SEO最適化完了。_
 
-- [ ] 4.3 (P) ローディング状態の実装
+- [x] 4.3 (P) ローディング状態の実装
   - `/app/loading.tsx`を作成する
   - スピナーまたはスケルトンUIを実装する
   - _Requirements: 7.1, 7.3_
+  - _完了: app/loading.tsx にスケルトンUIを実装。shadcn/ui Cardコンポーネント使用。_
 
-- [ ] 4.4 (P) エラー状態の実装
+- [x] 4.4 (P) エラー状態の実装
   - `/app/error.tsx`を作成する
   - エラーメッセージ「データの取得に失敗しました。再読み込みしてください。」を表示する
   - 再読み込みボタンを実装する
   - _Requirements: 7.2, 7.3_
+  - _完了: app/error.tsx にエラーUIを実装。再読み込みボタン付き。ビルド成功。_
 
 ### 5. 統合とテスト
 - [ ] 5.1 サンプルデータの投入
