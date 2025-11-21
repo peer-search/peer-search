@@ -12,6 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "seed:organizations": "node scripts/load-env.mjs scripts/seed-organizations.ts",
+    "test:rpc": "node scripts/load-env.mjs scripts/test-rpc-hierarchy.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -40,10 +42,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
     "drizzle-kit": "^0.31.7",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5"
   }
