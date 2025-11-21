@@ -9,9 +9,7 @@ export default async function Home() {
       <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">ホーム</h1>
-          <p className="mt-4 text-gray-600">
-            ログイン中: {user?.email}
-          </p>
+          <p className="mt-4 text-gray-600">ログイン中: {user?.email}</p>
         </div>
 
         <form action={signOut}>

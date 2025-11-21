@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase-auth/server";
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase-auth/server";
 
 // 現在のオリジンを取得する関数
 async function getOrigin() {
