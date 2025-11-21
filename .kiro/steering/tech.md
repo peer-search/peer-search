@@ -79,6 +79,9 @@ pnpm db:studio    # Launch Drizzle Studio
 
 ## Key Technical Decisions
 
+### Next.js 16 Proxy Pattern
+`middleware.ts` から `proxy.ts` へ移行（Next.js 16の新規約）。`proxy()` 関数で全ルートの認証チェックを実行。
+
 ### React 19 Server Components
 最新のReact Server Componentsを採用し、サーバーサイドでのデータフェッチとレンダリングを実現。クライアントバンドルサイズを最小化。
 
