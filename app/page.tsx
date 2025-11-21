@@ -41,10 +41,12 @@ export default async function Home() {
 
   // 成功時はOrganizationCardListにデータを渡してレンダリング
   return (
-    <main className="container mx-auto py-8">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold">組織階層</h1>
-        <p className="text-muted-foreground">
+    <main className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
+      <div className="mb-10 space-y-3">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+          組織階層
+        </h1>
+        <p className="text-base text-muted-foreground md:text-lg">
           会社・本部・部署・課／チームの組織階層を表示します
         </p>
       </div>

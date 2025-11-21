@@ -33,7 +33,25 @@ Next.js App Routerベースのフルスタックアーキテクチャ。React Se
 - **Recommended rules**: Next.js、React推奨ルール適用
 
 ### Testing
-現状未設定（将来的に追加予定）
+
+- **Test Runner**: Vitest 4.0.12 - 高速でVite互換のテストランナー
+- **Component Testing**: React Testing Library 16.3.0 - ユーザー視点のコンポーネントテスト
+- **DOM Environment**: happy-dom 20.0.10 - 軽量で高速なDOM環境（jsdomより高速）
+- **Assertions**: @testing-library/jest-dom - DOM要素のマッチャー拡張
+- **User Interaction**: @testing-library/user-event - ユーザーイベントのシミュレーション
+
+**Test Commands**:
+```bash
+pnpm test              # Watch mode
+pnpm test:run          # Run once
+pnpm test:ui           # UI mode (visual test runner)
+pnpm test:coverage     # Coverage report
+```
+
+**Test Strategy**:
+- **Unit Tests**: ビジネスロジック・ユーティリティ関数（例: ツリー構造変換）
+- **Component Tests**: React Componentsの描画・インタラクション（例: OrganizationCard）
+- **Integration Tests**: 将来的にE2Eフレームワーク（Playwright等）の導入を検討
 
 ## Development Environment
 

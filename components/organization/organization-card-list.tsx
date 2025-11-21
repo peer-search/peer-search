@@ -25,7 +25,8 @@ export interface OrganizationCardListProps {
  */
 export function OrganizationCardList({
   organizations,
-}: OrganizationCardListProps) {
+  isNested = false,
+}: OrganizationCardListProps & { isNested?: boolean }) {
   // 空配列の場合は空状態メッセージを表示
   if (!organizations || organizations.length === 0) {
     return (
@@ -37,14 +38,16 @@ export function OrganizationCardList({
 
   // 子ノードを再帰的にレンダリングする関数
   const renderChildren = (children: OrganizationTree[]): React.ReactNode => {
-    return <OrganizationCardList organizations={children} />;
+    return <OrganizationCardList organizations={children} isNested={true} />;
   };
 
+  // ネストされた子要素は縦並びのフレックスレイアウト、トップレベルはグリッドレイアウト
+  const containerClassName = isNested
+    ? "flex flex-col gap-4"
+    : "grid auto-rows-max grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3";
+
   return (
-    <div
-      className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-      data-testid="organization-card-list"
-    >
+    <div className={containerClassName} data-testid="organization-card-list">
       {organizations.map((org) => (
         <OrganizationCard
           key={org.id}
