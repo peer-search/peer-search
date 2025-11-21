@@ -34,7 +34,7 @@ export function OrganizationCard({
 
   return (
     <Card
-      className="transition-all hover:shadow-lg focus-within:outline focus-within:outline-2 focus-within:outline-primary"
+      className="flex min-h-fit flex-col transition-all hover:shadow-lg focus-within:outline focus-within:outline-2 focus-within:outline-primary"
       data-testid={`org-card-${node.id}`}
     >
       <Link
@@ -42,13 +42,15 @@ export function OrganizationCard({
         className="block focus:outline-none"
         aria-label={`${node.name}の社員一覧を表示`}
       >
-        <CardHeader>
-          <CardTitle className="text-lg">{node.name}</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold">{node.name}</CardTitle>
         </CardHeader>
       </Link>
 
       {hasChildren && renderChildren && (
-        <CardContent>{renderChildren(node.children)}</CardContent>
+        <CardContent className="flex-1 space-y-3 pt-2">
+          {renderChildren(node.children)}
+        </CardContent>
       )}
     </Card>
   );
