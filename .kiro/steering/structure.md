@@ -23,9 +23,22 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
 **Pattern**: shadcn/uiで管理、1コンポーネント1ファイル
 **Example**: `button.tsx`, `card.tsx`, `input.tsx`, `label.tsx`
 
+### Feature Components (`/components/{feature}/`)
+**Purpose**: 機能固有のビジネスコンポーネント
+**Pattern**: 機能ごとにサブディレクトリ化、テストとコロケーション
+**Example**:
+```
+/components/
+  organization/
+    organization-card.tsx
+    organization-card.test.tsx
+    organization-card-list.tsx
+    organization-card-list.test.tsx
+```
+
 ### Library Utils (`/lib/`)
 **Purpose**: 共通ユーティリティとサービスロジック
-**Pattern**: 機能ごとにサブディレクトリ化
+**Pattern**: 機能ごとにサブディレクトリ化、型定義とテストを含む
 **Example**:
 ```
 /lib/
@@ -35,17 +48,45 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     server.ts
     middleware.ts
     authGoogle.ts
+  organizations/       # Feature-specific logic
+    types.ts           # Type definitions
+    service.ts         # Data fetching
+    tree.ts            # Business logic
+    tree.test.ts       # Unit tests
 ```
 
-### Database Layer (`/db/`)
+### Database Layer (`/db/`, `/drizzle/`)
 **Purpose**: Drizzleスキーマとデータベース設定
-**Pattern**: `schema.ts`でスキーマ定義、`index.ts`で接続設定
+**Pattern**:
+- `schema.ts`でスキーマ定義、型エクスポート
+- `index.ts`でDB接続
+- マイグレーションファイルにCHECK制約とRPC関数を追加
 **Example**:
 ```
 /db/
-  schema.ts   # pgTable definitions
+  schema.ts   # pgTable definitions with type exports
   index.ts    # DB connection
+/drizzle/
+  0000_*.sql  # Generated migrations + manual RPC functions
 ```
+**Database Patterns**:
+- Self-referencing tables: `parent_id` → `id` (ON DELETE CASCADE)
+- Recursive CTE: `WITH RECURSIVE` for tree traversal
+- Supabase RPC: Postgres関数をRPCとして呼び出し
+
+### Scripts & Data (`/scripts/`, `/data/`)
+**Purpose**: データベースシード、テストスクリプト、サンプルデータ
+**Pattern**: TypeScriptスクリプトとCSVデータ
+**Example**:
+```
+/scripts/
+  load-env.mjs           # Environment loader
+  seed-organizations.ts  # DB seed scripts
+  test-rpc-hierarchy.ts  # RPC testing
+/data/
+  organizations-sample.csv
+```
+**Execution**: `node scripts/load-env.mjs scripts/{script}.ts`
 
 ## Naming Conventions
 
@@ -83,13 +124,18 @@ import "./globals.css";
 
 ### Auth Layer Separation
 - 認証ロジックは`/lib/supabase-auth/`に集約
-- `middleware.ts`で全ルートの認証チェック
+- `proxy.ts` (Next.js 16) で全ルートの認証チェック
 - `getUser()`でキャッシュされた認証情報を取得
 
 ### UI Component Isolation
 - shadcn/uiコンポーネントは`/components/ui/`に配置
 - ビジネスロジックを含まない純粋なUIコンポーネント
 - TypeScript interfaceを同じファイルにエクスポート
+
+### Test Collocation
+- コンポーネントテストは同じディレクトリに `.test.tsx` として配置
+- ユニットテストは同じディレクトリに `.test.ts` として配置
+- `tests/` ディレクトリにはテスト設定とドキュメントを配置
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_

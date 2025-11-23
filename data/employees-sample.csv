@@ -1,0 +1,11 @@
+employee_number,name_kanji,name_kana,email,hire_date,mobile_phone,photo_s3_key
+E001,山田太郎,やまだたろう,yamada.taro@example.com,2020-04-01,090-1234-5678,
+E002,佐藤花子,さとうはなこ,sato.hanako@example.com,2019-07-15,090-2345-6789,
+E003,鈴木一郎,すずきいちろう,suzuki.ichiro@example.com,2021-01-10,090-3456-7890,
+E004,田中美咲,たなかみさき,tanaka.misaki@example.com,2018-10-01,090-4567-8901,
+E005,伊藤健太,いとうけんた,ito.kenta@example.com,2022-04-01,090-5678-9012,
+E006,渡辺由美,わたなべゆみ,watanabe.yumi@example.com,2020-09-15,090-6789-0123,
+E007,高橋誠,たかはしまこと,takahashi.makoto@example.com,2019-03-20,090-7890-1234,
+E008,中村あゆみ,なかむらあゆみ,nakamura.ayumi@example.com,2021-06-01,090-8901-2345,
+E009,小林大輔,こばやしだいすけ,kobayashi.daisuke@example.com,2020-11-10,090-9012-3456,
+E010,加藤さくら,かとうさくら,kato.sakura@example.com,2022-01-15,,
