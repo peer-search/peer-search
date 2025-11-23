@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
+import { PageHeaderWrapper } from "@/components/layout/page-header-wrapper";
 import { WebVitals } from "@/components/web-vitals";
 import { getUser } from "@/lib/supabase-auth/auth";
 
@@ -27,12 +29,18 @@ export default async function RootLayout({
   // 認証情報を取得してキャッシュ
   await getUser();
 
+  // Check if current route is /login
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isLoginPage = pathname === "/login";
+
   return (
     <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <WebVitals />
+        {!isLoginPage && <PageHeaderWrapper />}
         {children}
       </body>
     </html>
