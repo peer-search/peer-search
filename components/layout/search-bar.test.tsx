@@ -30,10 +30,9 @@ describe("SearchBar Component", () => {
 
     it("should render search type dropdown with default '氏名' selected", () => {
       render(<SearchBar />);
-      // shadcn/ui Select uses combobox role
-      const select = screen.getByRole("combobox");
-      expect(select).toBeInTheDocument();
-      expect(select).toHaveTextContent("氏名");
+      // There are two comboboxes: search type and hire year
+      const comboboxes = screen.getAllByRole("combobox");
+      expect(comboboxes[0]).toHaveTextContent("氏名");
     });
 
     it("should render search input field with aria-label", () => {
@@ -48,21 +47,38 @@ describe("SearchBar Component", () => {
       const button = screen.getByRole("button", { name: /検索/i });
       expect(button).toBeInTheDocument();
     });
+
+    it("should render hire year filter radio buttons", () => {
+      render(<SearchBar />);
+      const radioOff = screen.getByLabelText("入社年指定なし");
+      const radioOn = screen.getByLabelText("入社年で絞り込み");
+      expect(radioOff).toBeInTheDocument();
+      expect(radioOn).toBeInTheDocument();
+    });
+
+    it("should render hire year dropdown (disabled by default)", () => {
+      render(<SearchBar />);
+      const comboboxes = screen.getAllByRole("combobox");
+      // Second combobox is hire year
+      expect(comboboxes[1]).toBeDisabled();
+    });
   });
 
   describe("Search Type Selection", () => {
-    it("should have hidden select with all options for accessibility", () => {
+    it("should have hidden select with name and employeeNumber options", () => {
       render(<SearchBar />);
 
       // Radix UI Select renders a hidden native select for accessibility
-      const hiddenSelect = document.querySelector('select[aria-hidden="true"]');
-      expect(hiddenSelect).toBeInTheDocument();
+      const hiddenSelects = document.querySelectorAll(
+        'select[aria-hidden="true"]',
+      );
+      // First hidden select is for search type
+      const searchTypeSelect = hiddenSelects[0];
 
-      const options = hiddenSelect?.querySelectorAll("option");
-      expect(options).toHaveLength(3);
+      const options = searchTypeSelect?.querySelectorAll("option");
+      expect(options).toHaveLength(2);
       expect(options?.[0]).toHaveTextContent("氏名");
       expect(options?.[1]).toHaveTextContent("社員番号");
-      expect(options?.[2]).toHaveTextContent("入社年");
     });
   });
 
@@ -77,7 +93,7 @@ describe("SearchBar Component", () => {
     });
   });
 
-  describe("Search Execution", () => {
+  describe("Search Execution - Basic Query", () => {
     it("should navigate to /employees with type and query params when search button is clicked", async () => {
       const user = userEvent.setup();
       render(<SearchBar />);
@@ -93,7 +109,7 @@ describe("SearchBar Component", () => {
       );
     });
 
-    it("should navigate to /employees without params when query is empty", async () => {
+    it("should navigate to /employees without params when query is empty and hire year is off", async () => {
       const user = userEvent.setup();
       render(<SearchBar />);
 
@@ -107,13 +123,14 @@ describe("SearchBar Component", () => {
       const user = userEvent.setup();
       render(<SearchBar />);
 
-      // Change search type via hidden select (simulating user interaction)
-      const hiddenSelect = document.querySelector(
+      // Change search type via hidden select
+      const hiddenSelects = document.querySelectorAll(
         'select[aria-hidden="true"]',
-      ) as HTMLSelectElement;
-      if (hiddenSelect) {
-        hiddenSelect.value = "employeeNumber";
-        hiddenSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      );
+      const searchTypeSelect = hiddenSelects[0] as HTMLSelectElement;
+      if (searchTypeSelect) {
+        searchTypeSelect.value = "employeeNumber";
+        searchTypeSelect.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
       const input = screen.getByLabelText("検索キーワード");
@@ -136,6 +153,79 @@ describe("SearchBar Component", () => {
 
       expect(mockPush).toHaveBeenCalledWith(
         "/employees?type=name&q=%E5%A4%AA%E9%83%8E",
+      );
+    });
+  });
+
+  describe("Hire Year Filter", () => {
+    it("should enable hire year dropdown when radio is set to enabled", async () => {
+      const user = userEvent.setup();
+      render(<SearchBar />);
+
+      const radioOn = screen.getByLabelText("入社年で絞り込み");
+      await user.click(radioOn);
+
+      const comboboxes = screen.getAllByRole("combobox");
+      expect(comboboxes[1]).not.toBeDisabled();
+    });
+
+    it("should navigate with hire_year param when hire year filter is enabled", async () => {
+      const user = userEvent.setup();
+      render(<SearchBar />);
+
+      // Enable hire year filter
+      const radioOn = screen.getByLabelText("入社年で絞り込み");
+      await user.click(radioOn);
+
+      // Enter search query
+      const input = screen.getByLabelText("検索キーワード");
+      await user.type(input, "山田");
+
+      const button = screen.getByRole("button", { name: /検索/i });
+      await user.click(button);
+
+      // Should include current year by default
+      const currentYear = new Date().getFullYear();
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringContaining(`hire_year=${currentYear}`),
+      );
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringContaining("type=name&q=%E5%B1%B1%E7%94%B0"),
+      );
+    });
+
+    it("should navigate with only hire_year when query is empty", async () => {
+      const user = userEvent.setup();
+      render(<SearchBar />);
+
+      // Enable hire year filter
+      const radioOn = screen.getByLabelText("入社年で絞り込み");
+      await user.click(radioOn);
+
+      const button = screen.getByRole("button", { name: /検索/i });
+      await user.click(button);
+
+      const currentYear = new Date().getFullYear();
+      expect(mockPush).toHaveBeenCalledWith(
+        `/employees?hire_year=${currentYear}`,
+      );
+    });
+
+    it("should not include hire_year param when filter is disabled", async () => {
+      const user = userEvent.setup();
+      render(<SearchBar />);
+
+      const input = screen.getByLabelText("検索キーワード");
+      await user.type(input, "山田");
+
+      const button = screen.getByRole("button", { name: /検索/i });
+      await user.click(button);
+
+      expect(mockPush).toHaveBeenCalledWith(
+        "/employees?type=name&q=%E5%B1%B1%E7%94%B0",
+      );
+      expect(mockPush).not.toHaveBeenCalledWith(
+        expect.stringContaining("hire_year"),
       );
     });
   });

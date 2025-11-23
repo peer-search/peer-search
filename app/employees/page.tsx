@@ -4,11 +4,11 @@ import { searchEmployees } from "@/lib/employees/service";
 import { getUser } from "@/lib/supabase-auth/auth";
 
 interface EmployeesPageSearchParams {
-  type?: "name" | "employeeNumber" | "hireYear";
+  type?: "name" | "employeeNumber";
   q?: string;
+  hire_year?: string;
   name?: string;
   employee_number?: string;
-  hire_year?: string;
   org_id?: string;
   sort?: "name_kana" | "employee_number" | "hire_date";
   order?: "asc" | "desc";
@@ -34,17 +34,12 @@ export default async function EmployeesPage({
   // 検索条件の構築
   const searchConditions: SearchEmployeesParams = {};
 
-  // SearchBarからの検索パラメータ (type + q) を優先処理
+  // SearchBarからの検索パラメータ (type + q) を処理
   if (params.type && params.q) {
     if (params.type === "name") {
       searchConditions.name = params.q;
     } else if (params.type === "employeeNumber") {
       searchConditions.employeeNumber = params.q;
-    } else if (params.type === "hireYear") {
-      const year = Number.parseInt(params.q, 10);
-      if (!Number.isNaN(year)) {
-        searchConditions.hireYear = year;
-      }
     }
   } else {
     // 従来の個別パラメータをフォールバック
@@ -55,12 +50,13 @@ export default async function EmployeesPage({
     if (params.employee_number) {
       searchConditions.employeeNumber = params.employee_number;
     }
+  }
 
-    if (params.hire_year) {
-      const year = Number.parseInt(params.hire_year, 10);
-      if (!Number.isNaN(year)) {
-        searchConditions.hireYear = year;
-      }
+  // 入社年フィルタ（独立して処理）
+  if (params.hire_year) {
+    const year = Number.parseInt(params.hire_year, 10);
+    if (!Number.isNaN(year)) {
+      searchConditions.hireYear = year;
     }
   }
 
@@ -104,16 +100,13 @@ export default async function EmployeesPage({
             {params.type === "employeeNumber" && params.q && (
               <span className="ml-2">社員番号「{params.q}」</span>
             )}
-            {params.type === "hireYear" && params.q && (
-              <span className="ml-2">入社年「{params.q}年」</span>
-            )}
             {!params.type && params.name && (
               <span className="ml-2">氏名「{params.name}」</span>
             )}
             {!params.type && params.employee_number && (
               <span className="ml-2">社員番号「{params.employee_number}」</span>
             )}
-            {!params.type && params.hire_year && (
+            {params.hire_year && (
               <span className="ml-2">入社年「{params.hire_year}年」</span>
             )}
             {params.org_id && <span className="ml-2">組織フィルタ適用中</span>}
