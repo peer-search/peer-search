@@ -101,3 +101,29 @@ export const employeeOrganizations = pgTable(
 
 export type EmployeeOrganization = typeof employeeOrganizations.$inferSelect;
 export type NewEmployeeOrganization = typeof employeeOrganizations.$inferInsert;
+
+/**
+ * Profiles table - ユーザー権限管理
+ *
+ * ロール (role):
+ * - user: 一般ユーザー（デフォルト）
+ * - admin: 管理者ユーザー
+ *
+ * Note: CHECK制約 (role IN ('user', 'admin')) はマイグレーションファイルで手動追加
+ */
+export const profiles = pgTable(
+  "profiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().unique(),
+    role: text("role").notNull().default("user"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // インデックス: user_idによる検索を高速化
+    index("idx_profiles_user_id").on(table.userId),
+  ],
+);
+
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;
