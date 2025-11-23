@@ -4,9 +4,9 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -27,12 +27,12 @@ const SEARCH_PLACEHOLDERS: Record<SearchType, string> = {
   employeeNumber: "社員番号で検索（例: EMP001）",
 };
 
-// 現在の年から100年前までの年のリストを生成
+// 現在の年から1983年までの年のリストを生成
 function generateYearOptions(): number[] {
   const currentYear = new Date().getFullYear();
   const years: number[] = [];
-  for (let i = 0; i < 100; i++) {
-    years.push(currentYear - i);
+  for (let year = currentYear; year >= 1983; year--) {
+    years.push(year);
   }
   return years;
 }
@@ -73,85 +73,79 @@ export function SearchBar() {
     <search className="contents">
       <form
         onSubmit={handleSearch}
-        className="flex flex-col gap-3 w-full max-w-2xl"
+        className="flex items-center gap-2 w-full max-w-2xl"
       >
-        {/* メイン検索行: 検索種別 + 入力 + ボタン */}
-        <div className="flex items-center gap-2">
-          <Select
-            value={searchType}
-            onValueChange={(value) => setSearchType(value as SearchType)}
+        {/* 検索種別 */}
+        <Select
+          value={searchType}
+          onValueChange={(value) => setSearchType(value as SearchType)}
+        >
+          <SelectTrigger
+            className="w-[100px] sm:w-[140px]"
+            aria-label="検索種別"
           >
-            <SelectTrigger
-              className="w-[100px] sm:w-[140px]"
-              aria-label="検索種別"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">{SEARCH_TYPE_LABELS.name}</SelectItem>
-              <SelectItem value="employeeNumber">
-                {SEARCH_TYPE_LABELS.employeeNumber}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">{SEARCH_TYPE_LABELS.name}</SelectItem>
+            <SelectItem value="employeeNumber">
+              {SEARCH_TYPE_LABELS.employeeNumber}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-          <Input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={SEARCH_PLACEHOLDERS[searchType]}
-            aria-label="検索キーワード"
-            className="flex-1 min-w-0"
+        {/* 検索入力 */}
+        <Input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={SEARCH_PLACEHOLDERS[searchType]}
+          aria-label="検索キーワード"
+          className="flex-1 min-w-0"
+        />
+
+        {/* 入社年チェックボックス */}
+        <div className="flex items-center gap-1.5">
+          <Checkbox
+            id="hire-year-filter"
+            checked={hireYearEnabled}
+            onCheckedChange={(checked) => setHireYearEnabled(checked === true)}
           />
-
-          <Button
-            type="submit"
-            size="icon"
-            aria-label="検索"
-            className="shrink-0"
+          <Label
+            htmlFor="hire-year-filter"
+            className="text-sm cursor-pointer whitespace-nowrap"
           >
-            <Search className="h-4 w-4" />
-          </Button>
+            入社年
+          </Label>
         </div>
 
-        {/* 入社年フィルタ行 */}
-        <div className="flex items-center gap-3 text-sm">
-          <RadioGroup
-            value={hireYearEnabled ? "enabled" : "disabled"}
-            onValueChange={(value) => setHireYearEnabled(value === "enabled")}
-            className="flex items-center gap-3"
-          >
-            <div className="flex items-center gap-1.5">
-              <RadioGroupItem value="disabled" id="hire-year-off" />
-              <Label htmlFor="hire-year-off" className="cursor-pointer">
-                入社年指定なし
-              </Label>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <RadioGroupItem value="enabled" id="hire-year-on" />
-              <Label htmlFor="hire-year-on" className="cursor-pointer">
-                入社年で絞り込み
-              </Label>
-            </div>
-          </RadioGroup>
+        {/* 入社年プルダウン */}
+        <Select
+          value={hireYear}
+          onValueChange={setHireYear}
+          disabled={!hireYearEnabled}
+        >
+          <SelectTrigger className="w-[100px] sm:w-[120px]" aria-label="入社年">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {yearOptions.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}年
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select
-            value={hireYear}
-            onValueChange={setHireYear}
-            disabled={!hireYearEnabled}
-          >
-            <SelectTrigger className="w-[120px]" aria-label="入社年">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {yearOptions.map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}年
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* 検索ボタン */}
+        <Button
+          type="submit"
+          size="icon"
+          aria-label="検索"
+          className="shrink-0"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
       </form>
     </search>
   );

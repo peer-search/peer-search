@@ -48,12 +48,10 @@ describe("SearchBar Component", () => {
       expect(button).toBeInTheDocument();
     });
 
-    it("should render hire year filter radio buttons", () => {
+    it("should render hire year filter checkbox", () => {
       render(<SearchBar />);
-      const radioOff = screen.getByLabelText("入社年指定なし");
-      const radioOn = screen.getByLabelText("入社年で絞り込み");
-      expect(radioOff).toBeInTheDocument();
-      expect(radioOn).toBeInTheDocument();
+      const checkbox = screen.getByRole("checkbox");
+      expect(checkbox).toBeInTheDocument();
     });
 
     it("should render hire year dropdown (disabled by default)", () => {
@@ -158,12 +156,12 @@ describe("SearchBar Component", () => {
   });
 
   describe("Hire Year Filter", () => {
-    it("should enable hire year dropdown when radio is set to enabled", async () => {
+    it("should enable hire year dropdown when checkbox is checked", async () => {
       const user = userEvent.setup();
       render(<SearchBar />);
 
-      const radioOn = screen.getByLabelText("入社年で絞り込み");
-      await user.click(radioOn);
+      const checkbox = screen.getByRole("checkbox");
+      await user.click(checkbox);
 
       const comboboxes = screen.getAllByRole("combobox");
       expect(comboboxes[1]).not.toBeDisabled();
@@ -174,8 +172,8 @@ describe("SearchBar Component", () => {
       render(<SearchBar />);
 
       // Enable hire year filter
-      const radioOn = screen.getByLabelText("入社年で絞り込み");
-      await user.click(radioOn);
+      const checkbox = screen.getByRole("checkbox");
+      await user.click(checkbox);
 
       // Enter search query
       const input = screen.getByLabelText("検索キーワード");
@@ -199,8 +197,8 @@ describe("SearchBar Component", () => {
       render(<SearchBar />);
 
       // Enable hire year filter
-      const radioOn = screen.getByLabelText("入社年で絞り込み");
-      await user.click(radioOn);
+      const checkbox = screen.getByRole("checkbox");
+      await user.click(checkbox);
 
       const button = screen.getByRole("button", { name: /検索/i });
       await user.click(button);
