@@ -120,7 +120,7 @@ export async function searchEmployees(
   const { name, employeeNumber, hireYear, orgId, sort, order } = params;
 
   // ベースクエリ: employees LEFT JOIN employee_organizations LEFT JOIN organizations
-  let query = db
+  const baseQuery = db
     .select({
       id: employees.id,
       employeeNumber: employees.employeeNumber,
@@ -143,7 +143,8 @@ export async function searchEmployees(
     .leftJoin(
       organizations,
       eq(employeeOrganizations.organizationId, organizations.id),
-    );
+    )
+    .$dynamic();
 
   // WHERE条件の構築
   const conditions = [];
@@ -176,6 +177,7 @@ export async function searchEmployees(
     conditions.push(inArray(employeeOrganizations.organizationId, orgIds));
   }
 
+  let query = baseQuery;
   if (conditions.length > 0) {
     query = query.where(and(...conditions));
   }

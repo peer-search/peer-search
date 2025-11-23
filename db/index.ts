@@ -1,10 +1,6 @@
-import dns from "node:dns";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
-
-// IPv4を優先してDNS解決（IPv6接続エラーを回避）
-dns.setDefaultResultOrder("ipv4first");
 
 // パスワードに特殊文字が含まれている場合の処理
 // URLの形式: postgresql://user:password@host:port/database
@@ -49,7 +45,6 @@ if (!process.env.DATABASE_URL) {
 // or use IPv4 address directly in DATABASE_URL
 const client = postgres(process.env.DATABASE_URL, {
   prepare: false,
-  // @ts-expect-error - postgres-js types don't include fetch_types but it's supported
   fetch_types: false,
   ssl: "prefer",
   connection: {
