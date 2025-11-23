@@ -137,8 +137,8 @@
 
 ### テストタスク
 
-- [ ] 5. ProfilesServiceのユニットテスト
-- [ ] 5.1 (P) ProfilesServiceのテスト実装
+- [x] 5. ProfilesServiceのユニットテスト
+- [x] 5.1 (P) ProfilesServiceのテスト実装
   - lib/profiles/service.test.tsを作成
   - getProfileByUserId()が正しいprofileオブジェクトを返すことを検証
   - user_idが存在しない場合、nullを返すことを検証
@@ -146,8 +146,8 @@
   - モックデータを使用してDrizzle ORMクエリをテスト
   - _Requirements: 8.5, 8.6_
 
-- [ ] 6. SearchBarコンポーネントのテスト
-- [ ] 6.1 (P) SearchBarコンポーネントのテスト実装
+- [x] 6. SearchBarコンポーネントのテスト
+- [x] 6.1 (P) SearchBarコンポーネントのテスト実装
   - components/layout/search-bar.test.tsxを作成
   - React Testing Libraryでコンポーネントテスト
   - 検索種別ドロップダウンがデフォルトで「氏名」を選択していることを検証
@@ -156,8 +156,8 @@
   - Enterキー押下で検索が実行されることを検証
   - _Requirements: 3.2, 3.3, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3_
 
-- [ ] 7. UserMenuコンポーネントのテスト
-- [ ] 7.1 (P) UserMenuコンポーネントのテスト実装
+- [x] 7. UserMenuコンポーネントのテスト
+- [x] 7.1 (P) UserMenuコンポーネントのテスト実装
   - components/layout/user-menu.test.tsxを作成
   - React Testing Libraryでコンポーネントテスト
   - ユーザーアイコンクリック時にメニューが開くことを検証
@@ -167,8 +167,8 @@
   - Supabase AuthのsignOut()をモック化
   - _Requirements: 6.1, 6.3, 7.1, 7.2, 8.1, 8.2, 8.3, 8.4, 11.1, 11.2_
 
-- [ ] 8. PageHeaderコンポーネントのテスト
-- [ ] 8.1* PageHeaderコンポーネントの基本テスト実装
+- [x] 8. PageHeaderコンポーネントのテスト
+- [x] 8.1* PageHeaderコンポーネントの基本テスト実装
   - components/layout/page-header.test.tsxを作成
   - React Testing Libraryでコンポーネントテスト
   - PageHeaderコンポーネントが3要素（ロゴ、検索バー、ユーザーアイコン）を表示することを検証
