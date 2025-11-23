@@ -32,12 +32,23 @@ Next.js 16 + React 19 + Supabaseを使用したWebアプリケーション
 
 ```env
 # Supabase環境変数
-SUPABASE_URL=your-supabase-project-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # データベース接続URL (Supabase Settings > Database > Connection string > URI)
 DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+
+# AWS S3設定（社員写真等の静的ファイル管理）
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+S3_BUCKET_NAME=your-bucket-name
+
+# CloudFront CDN（オプション）
+CLOUDFRONT_DOMAIN=your-cloudfront-domain.cloudfront.net
 ```
+
+> **注意**: `.env.local`は`.gitignore`に含まれており、Gitにコミットされません。本番環境ではVercel Environment Variablesで設定してください。
 
 ### インストール
 
@@ -83,6 +94,29 @@ peer-search-re/
 
 ## 主要機能
 
+### 社員一覧画面 (`/employees`)
+
+組織内の社員情報を検索・閲覧するための画面です。
+
+**主な機能**:
+- 社員情報のカード形式表示
+- 氏名・社員番号・入社年による検索
+- 組織階層画面からの部署フィルタリング
+- ソート機能（氏名かな、社員番号、入社年）
+- AWS S3からの社員写真表示
+- 社員詳細画面への遷移
+
+**技術的特徴**:
+- React Server Componentsによるサーバーサイドレンダリング
+- Next.js 16のApp Router活用
+- Drizzle ORMによる型安全なデータベース操作
+- レスポンシブデザイン（デスクトップ・タブレット・モバイル対応）
+
+**詳細ドキュメント**:
+- [パフォーマンステスト](docs/PERFORMANCE_TESTING.md)
+- [アクセシビリティ監査](docs/ACCESSIBILITY_AUDIT.md)
+- [セキュリティレビュー](docs/SECURITY_REVIEW.md)
+
 ### UI コンポーネント
 - shadcn/ui による再利用可能なコンポーネント
 - Tailwind CSS 4 ベースのスタイリング
@@ -91,12 +125,17 @@ peer-search-re/
 ### 認証
 - Supabase + Google OAuth認証
 - 環境に応じた動的リダイレクトURL設定
-- ミドルウェアでの認証チェック
+- proxy.ts（Next.js 16）による認証チェック
 
 ### データベース
 - PostgreSQL (Supabaseホスト)
 - Drizzle ORMによるマイグレーション管理
-- `profiles`テーブル実装済み
+- テーブル: `profiles`, `employees`, `employee_organizations`, `organizations`
+
+### 静的ファイル管理
+- AWS S3による画像・ファイル保管
+- CloudFront CDN対応（オプション）
+- Next.js Imageコンポーネントによる自動最適化
 
 ## 開発コマンド
 
@@ -116,6 +155,12 @@ pnpm lint
 # フォーマット
 pnpm format
 
+# テスト
+pnpm test              # Watch mode
+pnpm test:run          # Run once
+pnpm test:ui           # UI mode (visual test runner)
+pnpm test:coverage     # Coverage report
+
 # データベースマイグレーション生成
 pnpm db:generate
 
@@ -130,6 +175,12 @@ pnpm db:studio
 
 # shadcn/uiコンポーネント追加
 pnpm dlx shadcn@latest add [component-name]
+
+# パフォーマンステスト（社員検索）
+node scripts/load-env.mjs scripts/test-employee-performance.ts
+
+# インデックス検証
+node scripts/load-env.mjs scripts/verify-employee-indexes.ts
 ```
 
 ## コーディング規約

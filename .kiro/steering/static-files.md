@@ -160,22 +160,49 @@ import { getS3Url } from "@/lib/s3/url";
 
 ### Access Control
 
-- **Public files**: S3バケットポリシーでパブリック読み取り許可
-- **Private files**: Presigned URLで一時的アクセス権付与
+**デフォルト**: S3バケットは完全にプライベート設定とし、Presigned URLでアクセス制御
+
+- **Private files (推奨)**: Presigned URLで一時的アクセス権付与 ✅ **実装済み**
+- **Public files (非推奨)**: S3バケットポリシーでパブリック読み取り許可
+  - 機密性のないファイルのみ（例: 公開ロゴ、アイコン）
+  - 社内ポリシーで禁止されている場合は使用不可
 
 ```typescript
-// Private fileの参照URL生成
+// Private fileの参照URL生成（実装例）
+// lib/s3/presigned-url.ts
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getS3Client } from "./client";
 
-async function getPrivateFileUrl(key: string) {
-  const client = new S3Client({ region: process.env.AWS_REGION });
+export async function generatePresignedGetUrl(
+  key: string,
+  expiresIn: number = 3600
+): Promise<string> {
+  const client = getS3Client();
   const command = new GetObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME,
+    Bucket: process.env.S3_BUCKET_NAME!,
     Key: key,
   });
 
-  return await getSignedUrl(client, command, { expiresIn: 3600 }); // 1時間有効
+  return await getSignedUrl(client, command, { expiresIn }); // デフォルト1時間有効
+}
+```
+
+**API Route経由でPresigned URLを発行**:
+```typescript
+// app/api/s3/presign/route.ts
+export async function POST(request: NextRequest) {
+  // 1. 認証チェック
+  const user = await getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // 2. Presigned URL生成
+  const { s3Key } = await request.json();
+  const presignedUrl = await generatePresignedGetUrl(s3Key);
+
+  return NextResponse.json({ url: presignedUrl });
 }
 ```
 
