@@ -59,8 +59,8 @@
   - キーボードナビゲーション対応（Tab、Enter）
   - _Requirements: 3.4, 3.5, 4.2, 12.3, 14.3, 15.5_
 
-- [ ] 3. UserMenuコンポーネントの実装
-- [ ] 3.1 (P) UserMenuコンポーネントの基本実装
+- [x] 3. UserMenuコンポーネントの実装
+- [x] 3.1 (P) UserMenuコンポーネントの基本実装
   - components/layout/user-menu.tsxにClient Componentとして実装（"use client"）
   - shadcn/uiのDropdownMenu、Avatarコンポーネントを活用
   - メニューの開閉状態（isOpen: boolean）をReact stateで管理
@@ -68,7 +68,7 @@
   - propsとしてuserオブジェクト（Googleアバター画像URL含む）とisAdminフラグを受け取る
   - _Requirements: 6.4, 7.5, 7.6, 14.5_
 
-- [ ] 3.2 (P) Googleアバターアイコンの表示
+- [x] 3.2 (P) Googleアバターアイコンの表示
   - user.user_metadata.avatar_urlをAvatarImage srcに設定
   - AvatarFallbackでイニシャル表示を実装（user.emailの最初の文字を大文字化）
   - 円形のアバター画像として表示
@@ -76,7 +76,7 @@
   - aria-label="ユーザーメニューを開く"を設定
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 14.4, 15.3_
 
-- [ ] 3.3 (P) ドロップダウンメニューの開閉とキーボード操作
+- [x] 3.3 (P) ドロップダウンメニューの開閉とキーボード操作
   - ユーザーアイコンクリックでメニューを開閉
   - メニュー外クリックで自動的に閉じる（shadcn/ui DropdownMenu標準機能）
   - Escキー押下でメニューを閉じる
@@ -84,20 +84,20 @@
   - キーボードナビゲーション対応（Tab、Enter、Escape）
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 14.5, 14.6_
 
-- [ ] 3.4 (P) 権限に応じたメニュー項目の表示制御
+- [x] 3.4 (P) 権限に応じたメニュー項目の表示制御
   - isAdminフラグがtrueの場合、「社員追加」「部署編集」メニュー項目を表示
   - isAdminフラグがfalseの場合、「ログアウト」メニュー項目のみ表示
   - 全ユーザーに「ログアウト」メニュー項目を表示
   - DropdownMenuItemをクリック可能なリンクまたはボタンとして実装
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.6_
 
-- [ ] 3.5 管理者メニューのナビゲーション実装
+- [x] 3.5 管理者メニューのナビゲーション実装
   - 「社員追加」クリック時、Next.js useRouterで`/employees/new`へナビゲート
   - 「部署編集」クリック時、Next.js useRouterで`/admin/departments`へナビゲート
   - メニュー項目クリック後、メニューを自動的に閉じる
   - _Requirements: 9.1, 9.2, 9.3, 10.1, 10.2, 10.3_
 
-- [ ] 3.6 ログアウト機能の実装
+- [x] 3.6 ログアウト機能の実装
   - 「ログアウト」クリック時、Supabase AuthのsignOut()を実行
   - ログアウト処理中、isLoadingをtrueに設定しボタンを無効化
   - signOut()成功後、Next.js useRouterで`/login`へリダイレクト
