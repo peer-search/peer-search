@@ -105,8 +105,8 @@
   - 非同期関数として実装し、エラーハンドリングを含める
   - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ] 4. PageHeaderコンポーネントの実装
-- [ ] 4.1 PageHeaderコンポーネントの基本実装
+- [x] 4. PageHeaderコンポーネントの実装
+- [x] 4.1 PageHeaderコンポーネントの基本実装
   - components/layout/page-header.tsxにServer Componentとして実装
   - `<header>`タグでラップし、role="banner"属性を設定
   - サーバーサイドでgetUser()を実行し、認証済みユーザー情報を取得
@@ -114,7 +114,7 @@
   - profileが存在しない場合、isAdmin=falseとしてデフォルト権限で処理
   - _Requirements: 1.1, 1.2, 1.5, 6.2, 8.5, 8.6, 14.1, 15.1_
 
-- [ ] 4.2 PageHeaderレイアウトの実装
+- [x] 4.2 PageHeaderレイアウトの実装
   - 左側にロゴ/システム名、中央にSearchBar、右側にUserMenuの3要素を水平配置
   - ロゴ/システム名をNext.js Linkコンポーネントでラップし、href="/"を設定
   - ロゴ画像が存在しない場合、テキストベースのシステム名を表示
@@ -122,13 +122,13 @@
   - shadcn/uiとTailwind CSS 4でスタイリング
   - _Requirements: 1.3, 1.4, 2.1, 2.2, 2.3_
 
-- [ ] 4.3 PageHeaderのレスポンシブデザイン実装
+- [x] 4.3 PageHeaderのレスポンシブデザイン実装
   - デスクトップ画面（幅768px以上）では、ロゴ・検索バー・ユーザーアイコンを水平一列に配置
   - モバイル画面（幅768px未満）では、検索バーを2行目に配置し、ロゴとユーザーアイコンを1行目に配置
   - Tailwind CSSのレスポンシブユーティリティクラス（sm:、md:、lg:）を使用
   - _Requirements: 12.1, 12.2, 12.4_
 
-- [ ] 4.4 PageHeaderをapp/layout.tsxに統合
+- [x] 4.4 PageHeaderをapp/layout.tsxに統合
   - app/layout.tsx内でPageHeaderコンポーネントをインポート
   - children前にPageHeaderを配置し、全ページで共通表示
   - `/login`ルートでは条件分岐でPageHeaderを非表示にする

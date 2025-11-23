@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 
 // Mock Supabase client
 const mockSignOut = vi.fn();
-vi.mock("@/lib/supabase-auth/middleware", () => ({
+vi.mock("@/lib/supabase-auth/client", () => ({
   createClient: vi.fn(() => ({
     auth: {
       signOut: mockSignOut,

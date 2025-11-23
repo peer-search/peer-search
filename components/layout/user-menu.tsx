@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase-auth/middleware";
+import { createClient } from "@/lib/supabase-auth/client";
 
 interface UserMenuProps {
   user: User;
