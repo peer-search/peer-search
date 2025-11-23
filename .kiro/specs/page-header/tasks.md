@@ -35,8 +35,8 @@
 
 ### コンポーネント層
 
-- [ ] 2. SearchBarコンポーネントの実装
-- [ ] 2.1 (P) SearchBarコンポーネントの基本実装
+- [x] 2. SearchBarコンポーネントの実装
+- [x] 2.1 (P) SearchBarコンポーネントの基本実装
   - components/layout/search-bar.tsxにClient Componentとして実装（"use client"）
   - shadcn/uiのSelect、Input、Buttonコンポーネントを活用
   - 検索種別の選択状態（searchType: 'name' | 'employeeNumber' | 'hireYear'）をReact stateで管理
@@ -45,14 +45,14 @@
   - `<form>`タグでラップし、role="search"属性を設定
   - _Requirements: 3.1, 3.2, 3.3, 3.6, 4.1, 4.7, 14.2_
 
-- [ ] 2.2 (P) 検索実行ロジックの実装
+- [x] 2.2 (P) 検索実行ロジックの実装
   - 検索ボタンクリック時、Next.js useRouterで`/employees?type={検索種別}&q={検索クエリ}`へナビゲート
   - Enterキー押下時、検索ボタンと同じ処理を実行（form onSubmit）
   - クエリが空文字列の場合、`/employees`へナビゲート（クエリパラメータなし）
   - 検索種別に応じてtypeパラメータを設定（name, employeeNumber, hireYear）
   - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 2.3 (P) SearchBarのレスポンシブデザインとアクセシビリティ
+- [x] 2.3 (P) SearchBarのレスポンシブデザインとアクセシビリティ
   - Tailwind CSSでモバイル画面対応（検索種別ドロップダウンと入力フィールドの幅調整）
   - 検索入力フィールドにaria-label="検索キーワード"を設定
   - 選択された検索種別に応じてプレースホルダーテキストを動的に変更
