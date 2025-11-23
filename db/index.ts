@@ -46,9 +46,13 @@ if (!process.env.DATABASE_URL) {
 const client = postgres(process.env.DATABASE_URL, {
   prepare: false,
   fetch_types: false,
-  ssl: "prefer",
+  ssl: "require",
   connection: {
     application_name: "peer-search-re",
   },
+  // Vercelのサーバーレス環境用の設定
+  max: 1, // サーバーレス環境では接続を1つに制限
+  idle_timeout: 20, // アイドルタイムアウトを短く設定
+  connect_timeout: 10, // 接続タイムアウトを10秒に設定
 });
 export const db = drizzle(client, { schema });
