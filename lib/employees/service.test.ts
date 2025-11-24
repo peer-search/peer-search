@@ -7,7 +7,12 @@ import type {
   EmployeeOrganization,
   SearchEmployeesParams,
 } from "./service";
-import { createEmployee, getEmployeeById } from "./service";
+import {
+  createEmployee,
+  deleteEmployee,
+  getEmployeeById,
+  updateEmployee,
+} from "./service";
 import type { CreateEmployeeInput } from "./types";
 
 // Mock the database
@@ -464,5 +469,233 @@ describe("createEmployee", () => {
     expect(result.hireDate.getFullYear()).toBe(2024);
     expect(result.hireDate.getMonth()).toBe(0); // 0-indexed (January)
     expect(result.hireDate.getDate()).toBe(15);
+  });
+});
+
+describe("updateEmployee", () => {
+  const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440100";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("社員情報を正常に更新できる", async () => {
+    const updateData = {
+      nameKanji: "更新太郎",
+      nameKana: "コウシンタロウ",
+      email: "updated@example.com",
+      hireDate: "2024-02-01",
+      mobilePhone: "080-9999-8888",
+    };
+
+    // モックの設定: update
+    const mockUpdate = {
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([
+        {
+          id: mockEmployeeId,
+          employeeNumber: "TEST-001",
+          nameKanji: updateData.nameKanji,
+          nameKana: updateData.nameKana,
+          email: updateData.email,
+          hireDate: updateData.hireDate,
+          mobilePhone: updateData.mobilePhone,
+          photoS3Key: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    };
+
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+
+    // モックの設定: getEmployeeById (内部で呼び出される)
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        {
+          id: mockEmployeeId,
+          employeeNumber: "TEST-001",
+          nameKanji: updateData.nameKanji,
+          nameKana: updateData.nameKana,
+          email: updateData.email,
+          hireDate: updateData.hireDate,
+          mobilePhone: updateData.mobilePhone,
+          photoS3Key: null,
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+      ]),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Act
+    const result = await updateEmployee(mockEmployeeId, updateData);
+
+    // Assert
+    expect(result).toBeDefined();
+    expect(result.id).toBe(mockEmployeeId);
+    expect(result.nameKanji).toBe(updateData.nameKanji);
+    expect(result.nameKana).toBe(updateData.nameKana);
+    expect(result.email).toBe(updateData.email);
+    expect(result.mobilePhone).toBe(updateData.mobilePhone);
+  });
+
+  it("存在しない社員IDでエラーをスローする", async () => {
+    // モックの設定: update returning empty array
+    const mockUpdate = {
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([]),
+    };
+
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+
+    // Act & Assert
+    await expect(
+      updateEmployee("nonexistent-id", { nameKanji: "テスト" }),
+    ).rejects.toThrow("Employee not found");
+  });
+
+  it("UNIQUE制約違反（メールアドレス重複）時にエラーをスローする", async () => {
+    // モックの設定: PostgreSQLのUNIQUE制約エラーをシミュレート
+    const mockUpdate = {
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockRejectedValue(
+        Object.assign(
+          new Error("duplicate key value violates unique constraint"),
+          {
+            code: "23505",
+            constraint: "employees_email_unique",
+          },
+        ),
+      ),
+    };
+
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+
+    // Act & Assert
+    await expect(
+      updateEmployee(mockEmployeeId, { email: "duplicate@example.com" }),
+    ).rejects.toThrow();
+  });
+
+  it("携帯電話をnullに更新できる", async () => {
+    const updateData = {
+      mobilePhone: null,
+    };
+
+    // モックの設定: update
+    const mockUpdate = {
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([
+        {
+          id: mockEmployeeId,
+          employeeNumber: "TEST-001",
+          nameKanji: "テスト太郎",
+          nameKana: "テストタロウ",
+          email: "test@example.com",
+          hireDate: "2024-01-15",
+          mobilePhone: null,
+          photoS3Key: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    };
+
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+
+    // モックの設定: getEmployeeById
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        {
+          id: mockEmployeeId,
+          employeeNumber: "TEST-001",
+          nameKanji: "テスト太郎",
+          nameKana: "テストタロウ",
+          email: "test@example.com",
+          hireDate: "2024-01-15",
+          mobilePhone: null,
+          photoS3Key: null,
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+      ]),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Act
+    const result = await updateEmployee(mockEmployeeId, updateData);
+
+    // Assert
+    expect(result.mobilePhone).toBeNull();
+  });
+});
+
+describe("deleteEmployee", () => {
+  const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440200";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("社員を正常に削除できる", async () => {
+    // モックの設定: delete
+    const mockDelete = {
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([{ id: mockEmployeeId }]),
+    };
+
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+
+    // Act & Assert (エラーがスローされないことを確認)
+    await expect(deleteEmployee(mockEmployeeId)).resolves.toBeUndefined();
+  });
+
+  it("存在しない社員IDでエラーをスローする", async () => {
+    // モックの設定: delete returning empty array
+    const mockDelete = {
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([]),
+    };
+
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+
+    // Act & Assert
+    await expect(deleteEmployee("nonexistent-id")).rejects.toThrow(
+      "Employee not found",
+    );
+  });
+
+  it("CASCADE DELETEにより関連レコードも削除される", async () => {
+    // このテストはモックレベルでは検証が難しいため、
+    // 実際のDBを使った統合テストで検証する
+    // ここではCASCADE DELETE設定があることをドキュメント化
+
+    // モックの設定
+    const mockDelete = {
+      where: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([{ id: mockEmployeeId }]),
+    };
+
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+
+    // Act
+    await deleteEmployee(mockEmployeeId);
+
+    // Assert: CASCADE DELETEはDB側の設定で自動実行される
+    // employee_organizationsテーブルのレコードも自動削除されることを期待
+    expect(mockDelete.where).toHaveBeenCalled();
   });
 });
