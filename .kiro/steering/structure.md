@@ -15,7 +15,10 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
   layout.tsx           # Root layout (RSC)
   page.tsx             # Home page
   login/page.tsx       # /login route
-  api/auth/callback/   # API route handlers
+  employees/page.tsx   # /employees route
+  api/
+    auth/callback/     # OAuth callback
+    s3/presign/        # S3 presigned URL API
 ```
 
 ### UI Components (`/components/ui/`)
@@ -34,6 +37,16 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     organization-card.test.tsx
     organization-card-list.tsx
     organization-card-list.test.tsx
+  employee/
+    employee-card.tsx
+    employee-card.test.tsx
+    employee-card-list.tsx
+    search-form.tsx
+    sort-controls.tsx
+  layout/
+    page-header.tsx
+    search-bar.tsx
+    user-menu.tsx
 ```
 
 ### Library Utils (`/lib/`)
@@ -48,11 +61,22 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     server.ts
     middleware.ts
     authGoogle.ts
-  organizations/       # Feature-specific logic
-    types.ts           # Type definitions
-    service.ts         # Data fetching
-    tree.ts            # Business logic
-    tree.test.ts       # Unit tests
+  organizations/       # Organization logic
+    types.ts
+    service.ts
+    tree.ts
+    tree.test.ts
+  employees/           # Employee search logic
+    service.ts
+    service.test.ts
+  profiles/            # User profile & permissions
+    service.ts
+    service.test.ts
+  s3/                  # AWS S3 utilities
+    client.ts
+    presigned-url.ts
+    url.ts
+    use-presigned-url.ts
 ```
 
 ### Database Layer (`/db/`, `/drizzle/`)

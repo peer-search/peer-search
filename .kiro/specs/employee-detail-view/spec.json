@@ -1,0 +1,22 @@
+{
+  "feature_name": "employee-detail-view",
+  "created_at": "2025-11-24T05:30:00Z",
+  "updated_at": "2025-11-24T06:30:00Z",
+  "language": "ja",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

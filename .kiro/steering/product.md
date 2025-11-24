@@ -4,10 +4,12 @@ peer-search-reは、Next.js 16、React 19、Supabaseをベースにした最新�
 
 ## Core Capabilities
 
-- **ユーザー認証** - Supabase + Google OAuthによるセキュアな認証システム
+- **ユーザー認証** - Supabase + Google OAuthによるセキュアな認証システム、役割ベースアクセス制御（RBAC）
 - **データ永続化** - PostgreSQL + Drizzle ORMによるタイプセーフなデータベース操作
 - **組織階層管理** - 再帰的なツリー構造で4階層の組織データを管理（会社→本部→部署→課/チーム）
-- **モダンUI** - shadcn/uiとTailwind CSS 4による再利用可能なコンポーネントシステム
+- **社員検索システム** - 氏名・社員番号・入社年・組織による多軸検索、ソート機能
+- **静的ファイル管理** - AWS S3統合によるPresigned URL方式での画像・ファイル管理
+- **モダンUI** - shadcn/uiとTailwind CSS 4による再利用可能なコンポーネントシステム、レスポンシブ対応
 - **自動テスト** - Vitest + React Testing Libraryによるユニット・コンポーネントテスト
 
 ## Target Use Cases

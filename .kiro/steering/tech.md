@@ -29,8 +29,9 @@ Next.js App Routerベースのフルスタックアーキテクチャ。React Se
 ### Code Quality
 - **Linter/Formatter**: Biome 2.2.0
 - **Pre-commit hooks**: Husky + lint-staged
-- **Import organization**: 自動整理 (`source.organizeImports`)
-- **Recommended rules**: Next.js、React推奨ルール適用
+- **Import organization**: 自動整理 (`assist.actions.source.organizeImports`)
+- **Recommended rules**: Next.js、React推奨ルール (`domains.next`、`domains.react`)
+- **VCS Integration**: Git `.gitignore` 自動認識
 
 ### Testing
 
