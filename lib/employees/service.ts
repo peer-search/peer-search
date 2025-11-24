@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { employeeOrganizations, employees, organizations } from "@/db/schema";
+import type { CreateEmployeeInput, UpdateEmployeeInput } from "./types";
 
 /**
  * 組織IDから階層パスを生成する
@@ -345,4 +346,90 @@ export async function getEmployeeById(
   }
 
   return employee;
+}
+
+/**
+ * 新規社員を作成
+ * @param data - 社員データ
+ * @returns 作成された社員情報
+ * @throws データベースエラー（UNIQUE制約違反など）
+ */
+export async function createEmployee(
+  data: CreateEmployeeInput,
+): Promise<Employee> {
+  // フェーズ1: 単一テーブル操作のため非トランザクション実装
+  // フェーズ2で所属組織追加機能を実装する際にトランザクション化
+  const [employee] = await db
+    .insert(employees)
+    .values({
+      employeeNumber: data.employeeNumber,
+      nameKanji: data.nameKanji,
+      nameKana: data.nameKana,
+      email: data.email,
+      hireDate: data.hireDate, // string in "YYYY-MM-DD" format
+      mobilePhone: data.mobilePhone || null,
+      photoS3Key: null, // 初期値はnull
+    })
+    .returning();
+
+  // 作成した社員情報を返却（所属組織情報は空配列）
+  return {
+    ...employee,
+    hireDate: new Date(employee.hireDate),
+    organizations: [],
+  };
+}
+
+/**
+ * 社員情報を更新
+ * @param employeeId - 社員UUID
+ * @param data - 更新データ
+ * @returns 更新された社員情報
+ * @throws 社員が存在しない場合、データベースエラー
+ */
+export async function updateEmployee(
+  employeeId: string,
+  data: UpdateEmployeeInput,
+): Promise<Employee> {
+  // 単一テーブル更新のためトランザクション不要
+  const [employee] = await db
+    .update(employees)
+    .set({
+      nameKanji: data.nameKanji,
+      nameKana: data.nameKana,
+      email: data.email,
+      hireDate: data.hireDate, // string in "YYYY-MM-DD" format
+      mobilePhone: data.mobilePhone,
+    })
+    .where(eq(employees.id, employeeId))
+    .returning();
+
+  if (!employee) {
+    throw new Error("Employee not found");
+  }
+
+  // 所属組織情報を再取得（getEmployeeByIdを再利用）
+  const fullEmployee = await getEmployeeById(employeeId);
+  if (!fullEmployee) {
+    throw new Error("Employee not found");
+  }
+
+  return fullEmployee;
+}
+
+/**
+ * 社員を削除（物理削除）
+ * @param employeeId - 社員UUID
+ * @throws 社員が存在しない場合、データベースエラー
+ */
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  // CASCADE DELETE設定により、employee_organizationsも自動削除
+  const result = await db
+    .delete(employees)
+    .where(eq(employees.id, employeeId))
+    .returning({ id: employees.id });
+
+  if (result.length === 0) {
+    throw new Error("Employee not found");
+  }
 }

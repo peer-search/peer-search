@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { Profile } from "@/db/schema";
 import { getProfileByUserId } from "./service";
 
+// biome-ignore lint/suspicious/noExplicitAny: Mocking complex Drizzle ORM types requires any
+type MockChain = any;
+
 // Mock db module
 vi.mock("@/db", () => ({
   db: {
@@ -26,7 +29,7 @@ describe("ProfilesService", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([mockProfile]),
         }),
-      } as any);
+      } as MockChain);
 
       // Act
       const result = await getProfileByUserId(mockUserId);
@@ -45,7 +48,7 @@ describe("ProfilesService", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([]),
         }),
-      } as any);
+      } as MockChain);
 
       // Act
       const result = await getProfileByUserId(mockUserId);
@@ -69,7 +72,7 @@ describe("ProfilesService", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([mockProfile]),
         }),
-      } as any);
+      } as MockChain);
 
       // Act
       const result = await getProfileByUserId(mockUserId);
