@@ -11,7 +11,7 @@
 ### フェーズ1: データレイヤー実装
 
 - [ ] 1. 単一社員取得機能の実装 (P)
-- [ ] 1.1 (P) 単一社員データ取得関数の実装
+- [x] 1.1 (P) 単一社員データ取得関数の実装
   - `lib/employees/service.ts`に`getEmployeeById()`関数を追加
   - Drizzle ORMでemployees、employee_organizations、organizationsをLEFT JOINクエリ
   - `WHERE eq(employees.id, employeeId)`で単一レコード取得
@@ -30,13 +30,13 @@
 
 ### フェーズ2: ページコンポーネント実装
 
-- [ ] 2. 動的ルートページの実装
-- [ ] 2.1 動的ルートディレクトリ構造の作成
+- [x] 2. 動的ルートページの実装
+- [x] 2.1 動的ルートディレクトリ構造の作成
   - `app/employees/[employeeId]/`ディレクトリ作成
   - Next.js 16 App Router Dynamic Routesの規約に従う
   - _Requirements: 1.1_
 
-- [ ] 2.2 メインページコンポーネントの実装
+- [x] 2.2 メインページコンポーネントの実装
   - `app/employees/[employeeId]/page.tsx`を実装（RSC）
   - `params: Promise<{ employeeId: string }>`を受け取り、awaitで取得
   - `getUser()`で認証確認（未認証時はエラー）
@@ -46,7 +46,7 @@
   - 左カラムに`EmployeeDetailPhoto`、右カラムに`EmployeeDetailCard`を配置
   - _Requirements: 1.1, 1.2, 1.5, 2.1, 2.4, 7.2, 8.1, 10.1, 10.2_
 
-- [ ] 2.3 動的メタデータ生成の実装
+- [x] 2.3 動的メタデータ生成の実装
   - `generateMetadata()`関数を`page.tsx`に実装
   - `params.employeeId`をawaitで取得
   - `getEmployeeById(employeeId)`でデータ取得
@@ -54,13 +54,13 @@
   - Metadataオブジェクト生成: `title: "${employee.nameKanji} - 社員詳細 - peer-search"`
   - _Requirements: 8.2, 8.3_
 
-- [ ] 2.4 (P) ローディング画面の実装
+- [x] 2.4 (P) ローディング画面の実装
   - `app/employees/[employeeId]/loading.tsx`を実装（RSC）
   - shadcn/ui `Skeleton`コンポーネント使用
   - 2カラムレイアウトのスケルトン（写真エリア: 3:4アスペクト比、情報カード: 固定高さ）
   - _Requirements: 1.3_
 
-- [ ] 2.5 (P) エラーページの実装
+- [x] 2.5 (P) エラーページの実装
   - `app/employees/[employeeId]/error.tsx`を実装（Client Component）
   - `"use client"`宣言
   - Error Boundaryでエラーをキャッチしコンソールログにエラーメッセージ出力
@@ -69,7 +69,7 @@
   - 再試行ボタン（`reset()`呼び出し）
   - _Requirements: 1.4, 9.1, 9.5, 9.6_
 
-- [ ] 2.6 (P) 404ページの実装
+- [x] 2.6 (P) 404ページの実装
   - `app/employees/[employeeId]/not-found.tsx`を実装（RSC）
   - shadcn/ui Cardで404メッセージ表示
   - 社員一覧へのリンク（`/employees`）
