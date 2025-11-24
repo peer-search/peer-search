@@ -1,11 +1,14 @@
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
+import { employees } from "@/db/schema";
 import type {
   Employee,
   EmployeeOrganization,
   SearchEmployeesParams,
 } from "./service";
-import { getEmployeeById } from "./service";
+import { createEmployee, getEmployeeById } from "./service";
+import type { CreateEmployeeInput } from "./types";
 
 // Mock the database
 vi.mock("@/db", () => ({
@@ -280,5 +283,186 @@ describe("getEmployeeById", () => {
     // Assertions
     expect(employee).toBeTruthy();
     expect(employee?.organizations).toHaveLength(0);
+  });
+});
+
+describe("createEmployee", () => {
+  // テスト用の社員データ
+  const validEmployeeData: CreateEmployeeInput = {
+    employeeNumber: "TEST-001",
+    nameKanji: "テスト太郎",
+    nameKana: "テストタロウ",
+    email: "test.taro@example.com",
+    hireDate: "2024-01-15",
+    mobilePhone: "090-1234-5678",
+  };
+
+  // 各テストの前に、テスト用社員データをクリーンアップ
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    // 実際のDBを使用する統合テスト用のクリーンアップ
+    // モックモードでは実行されない
+    if (!vi.isMockFunction(db.delete)) {
+      try {
+        await db
+          .delete(employees)
+          .where(
+            eq(employees.employeeNumber, validEmployeeData.employeeNumber),
+          );
+        await db
+          .delete(employees)
+          .where(eq(employees.email, validEmployeeData.email));
+      } catch (error) {
+        // エラーは無視（データが存在しない場合）
+      }
+    }
+  });
+
+  it("新規社員を正常に作成できる", async () => {
+    // モックの設定
+    const mockInsert = {
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([
+        {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          employeeNumber: validEmployeeData.employeeNumber,
+          nameKanji: validEmployeeData.nameKanji,
+          nameKana: validEmployeeData.nameKana,
+          email: validEmployeeData.email,
+          hireDate: validEmployeeData.hireDate,
+          mobilePhone: validEmployeeData.mobilePhone,
+          photoS3Key: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    };
+
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+
+    // Act
+    const result = await createEmployee(validEmployeeData);
+
+    // Assert
+    expect(result).toBeDefined();
+    expect(result.id).toBeTruthy();
+    expect(result.employeeNumber).toBe(validEmployeeData.employeeNumber);
+    expect(result.nameKanji).toBe(validEmployeeData.nameKanji);
+    expect(result.nameKana).toBe(validEmployeeData.nameKana);
+    expect(result.email).toBe(validEmployeeData.email);
+    expect(result.hireDate).toEqual(new Date(validEmployeeData.hireDate));
+    expect(result.mobilePhone).toBe(validEmployeeData.mobilePhone);
+    expect(result.photoS3Key).toBeNull();
+    expect(result.organizations).toEqual([]);
+  });
+
+  it("携帯電話が未指定の場合、nullで保存される", async () => {
+    // Arrange
+    const dataWithoutPhone: CreateEmployeeInput = {
+      ...validEmployeeData,
+      mobilePhone: undefined,
+    };
+
+    // モックの設定
+    const mockInsert = {
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([
+        {
+          id: "550e8400-e29b-41d4-a716-446655440001",
+          employeeNumber: dataWithoutPhone.employeeNumber,
+          nameKanji: dataWithoutPhone.nameKanji,
+          nameKana: dataWithoutPhone.nameKana,
+          email: dataWithoutPhone.email,
+          hireDate: dataWithoutPhone.hireDate,
+          mobilePhone: null,
+          photoS3Key: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    };
+
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+
+    // Act
+    const result = await createEmployee(dataWithoutPhone);
+
+    // Assert
+    expect(result.mobilePhone).toBeNull();
+  });
+
+  it("UNIQUE制約違反（社員番号重複）時にエラーをスローする", async () => {
+    // モックの設定: PostgreSQLのUNIQUE制約エラーをシミュレート
+    const mockInsert = {
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockRejectedValue(
+        Object.assign(
+          new Error("duplicate key value violates unique constraint"),
+          {
+            code: "23505",
+            constraint: "employees_employee_number_unique",
+          },
+        ),
+      ),
+    };
+
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+
+    // Act & Assert
+    await expect(createEmployee(validEmployeeData)).rejects.toThrow();
+  });
+
+  it("UNIQUE制約違反（メールアドレス重複）時にエラーをスローする", async () => {
+    // モックの設定: PostgreSQLのUNIQUE制約エラーをシミュレート
+    const mockInsert = {
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockRejectedValue(
+        Object.assign(
+          new Error("duplicate key value violates unique constraint"),
+          {
+            code: "23505",
+            constraint: "employees_email_unique",
+          },
+        ),
+      ),
+    };
+
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+
+    // Act & Assert
+    await expect(createEmployee(validEmployeeData)).rejects.toThrow();
+  });
+
+  it("入社日が正しくDateオブジェクトに変換される", async () => {
+    // モックの設定
+    const mockInsert = {
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([
+        {
+          id: "550e8400-e29b-41d4-a716-446655440002",
+          employeeNumber: validEmployeeData.employeeNumber,
+          nameKanji: validEmployeeData.nameKanji,
+          nameKana: validEmployeeData.nameKana,
+          email: validEmployeeData.email,
+          hireDate: validEmployeeData.hireDate,
+          mobilePhone: validEmployeeData.mobilePhone,
+          photoS3Key: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    };
+
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+
+    // Act
+    const result = await createEmployee(validEmployeeData);
+
+    // Assert
+    expect(result.hireDate).toBeInstanceOf(Date);
+    expect(result.hireDate.getFullYear()).toBe(2024);
+    expect(result.hireDate.getMonth()).toBe(0); // 0-indexed (January)
+    expect(result.hireDate.getDate()).toBe(15);
   });
 });

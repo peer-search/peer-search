@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { employeeOrganizations, employees, organizations } from "@/db/schema";
+import type { CreateEmployeeInput } from "./types";
 
 /**
  * 組織IDから階層パスを生成する
@@ -345,4 +346,36 @@ export async function getEmployeeById(
   }
 
   return employee;
+}
+
+/**
+ * 新規社員を作成
+ * @param data - 社員データ
+ * @returns 作成された社員情報
+ * @throws データベースエラー（UNIQUE制約違反など）
+ */
+export async function createEmployee(
+  data: CreateEmployeeInput,
+): Promise<Employee> {
+  // フェーズ1: 単一テーブル操作のため非トランザクション実装
+  // フェーズ2で所属組織追加機能を実装する際にトランザクション化
+  const [employee] = await db
+    .insert(employees)
+    .values({
+      employeeNumber: data.employeeNumber,
+      nameKanji: data.nameKanji,
+      nameKana: data.nameKana,
+      email: data.email,
+      hireDate: new Date(data.hireDate),
+      mobilePhone: data.mobilePhone || null,
+      photoS3Key: null, // 初期値はnull
+    })
+    .returning();
+
+  // 作成した社員情報を返却（所属組織情報は空配列）
+  return {
+    ...employee,
+    hireDate: new Date(employee.hireDate),
+    organizations: [],
+  };
 }
