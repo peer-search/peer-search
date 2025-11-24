@@ -72,13 +72,13 @@
 
 ### 3. Server Actions実装
 
-- [ ] 3.1 共通権限チェック関数を実装
+- [x] 3.1 共通権限チェック関数を実装
   - `checkAdminPermission()`関数: `getUser()`でユーザー取得、`getProfileByUserId()`でrole取得
   - `role`が`admin`でない場合は`Error("Forbidden")`をスロー
   - テストケース: 管理者権限あり、一般ユーザー、未認証ユーザー
   - _Requirements: 1.1, 1.6, 2.1_
 
-- [ ] 3.2 新規社員追加Server Actionを実装
+- [x] 3.2 新規社員追加Server Actionを実装
   - `createEmployeeAction(formData)`: FormDataから入力データ抽出
   - 権限チェック実行（`checkAdminPermission()`）
   - バリデーション実行（`validateEmployeeData()`）
@@ -89,7 +89,7 @@
   - テストケース: 正常作成とリダイレクト、権限エラー、バリデーションエラー、UNIQUE制約違反
   - _Requirements: 1.2, 1.5, 2.1, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 6.1, 6.2, 8.3_
 
-- [ ] 3.3 社員情報更新Server Actionを実装
+- [x] 3.3 社員情報更新Server Actionを実装
   - `updateEmployeeAction(employeeId, formData)`: FormDataから更新データ抽出
   - 権限チェック実行
   - バリデーション実行
@@ -100,7 +100,7 @@
   - テストケース: 正常更新、権限エラー、バリデーションエラー、UNIQUE制約違反
   - _Requirements: 1.2, 1.5, 3.1, 3.4, 3.5, 3.6, 3.7, 6.2, 8.3_
 
-- [ ] 3.4 社員削除Server Actionを実装
+- [x] 3.4 社員削除Server Actionを実装
   - `deleteEmployeeAction(employeeId)`: 社員IDを受け取り
   - 権限チェック実行（エラー時は`throw`でerror.tsxへ）
   - `deleteEmployee()`呼び出し
