@@ -1,9 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/db";
 import type {
   Employee,
   EmployeeOrganization,
   SearchEmployeesParams,
 } from "./service";
+import { getEmployeeById } from "./service";
+
+// Mock the database
+vi.mock("@/db", () => ({
+  db: {
+    select: vi.fn(),
+    execute: vi.fn(),
+  },
+}));
 
 /**
  * EmployeeServiceのユニットテスト
@@ -87,5 +97,188 @@ describe("EmployeeService 型定義", () => {
     expect(employee.organizations).toHaveLength(2);
     expect(employee.organizations[0].organizationName).toBe("開発部");
     expect(employee.organizations[1].organizationName).toBe("営業部");
+  });
+});
+
+describe("getEmployeeById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("存在する社員IDで社員情報を取得できる", async () => {
+    // Setup mock data
+    const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+    const mockRows = [
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: "photos/123.jpg",
+        mobilePhone: "090-1234-5678",
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "技術本部",
+        position: "課長",
+      },
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: "photos/123.jpg",
+        mobilePhone: "090-1234-5678",
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org2",
+        organizationName: "開発部",
+        position: null,
+      },
+    ];
+
+    // Mock db.execute for WITH RECURSIVE queries (buildOrganizationPath)
+    vi.mocked(db.execute).mockImplementation(async (query: any) => {
+      const queryString = String(query);
+      if (queryString.includes("org1")) {
+        return [
+          { name: "ABC株式会社", level: 1 },
+          { name: "技術本部", level: 2 },
+        ] as any;
+      }
+      if (queryString.includes("org2")) {
+        return [
+          { name: "ABC株式会社", level: 1 },
+          { name: "技術本部", level: 2 },
+          { name: "開発部", level: 3 },
+        ] as any;
+      }
+      return [] as any;
+    });
+
+    // Mock db.select chain
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(mockRows),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertions
+    expect(employee).toBeTruthy();
+    expect(employee?.id).toBe(mockEmployeeId);
+    expect(employee?.nameKanji).toBe("山田太郎");
+    expect(employee?.nameKana).toBe("やまだたろう");
+    expect(employee?.employeeNumber).toBe("12345");
+    expect(employee?.email).toBe("yamada@example.com");
+    expect(employee?.mobilePhone).toBe("090-1234-5678");
+    expect(employee?.photoS3Key).toBe("photos/123.jpg");
+    expect(employee?.hireDate).toEqual(new Date("2020-04-01"));
+    expect(employee?.organizations).toHaveLength(2);
+    expect(employee?.organizations[0].organizationId).toBe("org1");
+    expect(employee?.organizations[0].position).toBe("課長");
+    expect(employee?.organizations[1].organizationId).toBe("org2");
+    expect(employee?.organizations[1].position).toBeNull();
+  });
+
+  it("存在しない社員IDでnullを返す", async () => {
+    const mockEmployeeId = "999e8400-e29b-41d4-a716-446655440000";
+
+    // Mock db.select to return empty array
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([]),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertion
+    expect(employee).toBeNull();
+  });
+
+  it("所属情報の階層パスが正しく生成される", async () => {
+    const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+    const mockRows = [
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: "photos/123.jpg",
+        mobilePhone: "090-1234-5678",
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "第一課",
+        position: null,
+      },
+    ];
+
+    // Mock buildOrganizationPath to return full path
+    vi.mocked(db.execute).mockResolvedValue([
+      { name: "ABC株式会社", level: 1 },
+      { name: "技術本部", level: 2 },
+      { name: "開発部", level: 3 },
+      { name: "第一課", level: 4 },
+    ] as any);
+
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(mockRows),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertion
+    expect(employee).toBeTruthy();
+    expect(employee?.organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部 第一課",
+    );
+  });
+
+  it("所属組織がない社員の場合、organizationsが空配列になる", async () => {
+    const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+    const mockRows = [
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: null,
+        organizationName: null,
+        position: null,
+      },
+    ];
+
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(mockRows),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertions
+    expect(employee).toBeTruthy();
+    expect(employee?.organizations).toHaveLength(0);
   });
 });

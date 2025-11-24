@@ -264,3 +264,85 @@ export async function searchEmployees(
 
   return employeesList;
 }
+
+/**
+ * 単一社員の詳細情報を取得（所属組織情報を含む）
+ *
+ * @param employeeId - 社員UUID
+ * @returns 社員情報（所属を含む）または null（存在しない場合）
+ * @throws データベース接続エラー
+ */
+export async function getEmployeeById(
+  employeeId: string,
+): Promise<Employee | null> {
+  // Drizzle ORM: employees LEFT JOIN employee_organizations LEFT JOIN organizations
+  const rows = await db
+    .select({
+      id: employees.id,
+      employeeNumber: employees.employeeNumber,
+      nameKanji: employees.nameKanji,
+      nameKana: employees.nameKana,
+      photoS3Key: employees.photoS3Key,
+      mobilePhone: employees.mobilePhone,
+      email: employees.email,
+      hireDate: employees.hireDate,
+      // 所属組織情報
+      organizationId: employeeOrganizations.organizationId,
+      organizationName: organizations.name,
+      position: employeeOrganizations.position,
+    })
+    .from(employees)
+    .leftJoin(
+      employeeOrganizations,
+      eq(employees.id, employeeOrganizations.employeeId),
+    )
+    .leftJoin(
+      organizations,
+      eq(employeeOrganizations.organizationId, organizations.id),
+    )
+    .where(eq(employees.id, employeeId));
+
+  // 存在しない場合はnullを返却
+  if (rows.length === 0) {
+    return null;
+  }
+
+  // 最初の行から基本情報を取得
+  const firstRow = rows[0];
+  const employee: Employee = {
+    id: firstRow.id,
+    employeeNumber: firstRow.employeeNumber,
+    nameKanji: firstRow.nameKanji,
+    nameKana: firstRow.nameKana,
+    photoS3Key: firstRow.photoS3Key,
+    mobilePhone: firstRow.mobilePhone,
+    email: firstRow.email,
+    hireDate: new Date(firstRow.hireDate),
+    organizations: [],
+  };
+
+  // 所属組織情報を集約（重複防止）
+  const orgIds = new Set<string>();
+  for (const row of rows) {
+    if (
+      row.organizationId &&
+      row.organizationName &&
+      !orgIds.has(row.organizationId)
+    ) {
+      orgIds.add(row.organizationId);
+      employee.organizations.push({
+        organizationId: row.organizationId,
+        organizationName: row.organizationName,
+        organizationPath: row.organizationName, // 暫定値（後で階層パスに置き換え）
+        position: row.position,
+      });
+    }
+  }
+
+  // 各所属組織の階層パスを生成
+  for (const org of employee.organizations) {
+    org.organizationPath = await buildOrganizationPath(org.organizationId);
+  }
+
+  return employee;
+}
