@@ -366,7 +366,7 @@ export async function createEmployee(
       nameKanji: data.nameKanji,
       nameKana: data.nameKana,
       email: data.email,
-      hireDate: new Date(data.hireDate),
+      hireDate: data.hireDate, // string in "YYYY-MM-DD" format
       mobilePhone: data.mobilePhone || null,
       photoS3Key: null, // 初期値はnull
     })
@@ -398,7 +398,7 @@ export async function updateEmployee(
       nameKanji: data.nameKanji,
       nameKana: data.nameKana,
       email: data.email,
-      hireDate: data.hireDate ? new Date(data.hireDate) : undefined,
+      hireDate: data.hireDate, // string in "YYYY-MM-DD" format
       mobilePhone: data.mobilePhone,
     })
     .where(eq(employees.id, employeeId))

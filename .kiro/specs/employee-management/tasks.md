@@ -147,7 +147,7 @@
 
 ### 5. ページ統合
 
-- [ ] 5.1 新規社員追加ページを実装
+- [x] 5.1 新規社員追加ページを実装
   - `/app/employees/new/page.tsx`: Server Componentとして実装
   - `getUser()`で認証チェック（未認証は`/login`へリダイレクト）
   - `getProfileByUserId()`で権限チェック（一般ユーザーは403エラー）
@@ -156,7 +156,7 @@
   - テストケース: 管理者アクセス時のフォーム表示、一般ユーザーアクセス時の403エラー
   - _Requirements: 1.3, 1.4, 1.5, 2.1, 7.3_
 
-- [ ] 5.2 社員詳細ページに編集・削除機能を統合
+- [x] 5.2 社員詳細ページに編集・削除機能を統合
   - `/app/employees/[employeeId]/page.tsx`: 既存ページを拡張
   - クエリパラメータ`?mode=edit`で編集モードに切り替え
   - 編集モード時: `EmployeeForm`コンポーネントを`mode="edit"`、`initialData={employee}`で表示
@@ -166,7 +166,7 @@
   - テストケース: 表示モード表示、編集ボタン表示（管理者のみ）、削除ボタン表示（管理者のみ）、編集モード表示、一般ユーザーの編集モードアクセス拒否
   - _Requirements: 1.2, 1.3, 1.4, 1.5, 3.1, 4.1, 7.1, 7.3, 7.5_
 
-- [ ] 5.3 PageHeaderに「新規社員追加」リンクを追加
+- [x] 5.3 PageHeaderに「新規社員追加」リンクを追加
   - `/components/layout/page-header.tsx`: 既存コンポーネントを拡張
   - `isAdmin`プロパティが`true`の場合のみリンク表示
   - リンク先: `/employees/new`

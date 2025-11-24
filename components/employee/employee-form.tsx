@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import {
   updateEmployeeAction,
 } from "@/lib/employees/actions";
 import type { Employee } from "@/lib/employees/service";
+import type { ActionResult } from "@/lib/employees/types";
 
 /**
  * フォームモード
@@ -57,17 +58,29 @@ export function EmployeeForm({
 }: EmployeeFormProps) {
   const router = useRouter();
 
-  // Server Actionの選択
-  // 編集モードの場合、employeeIdを含むラッパー関数を作成
-  const wrappedAction =
-    mode === "edit" && employeeId
-      ? (prevState: unknown, formData: FormData) =>
-          updateEmployeeAction(prevState, formData, employeeId)
-      : createEmployeeAction;
+  // Server Actionの選択 - 編集と新規で分ける
+  const [createState, createFormAction, createIsPending] = useActionState(
+    createEmployeeAction,
+    { success: false },
+  );
 
-  const [state, formAction, isPending] = useActionState(wrappedAction, {
-    success: false,
-  });
+  const [updateState, updateFormAction, updateIsPending] = useActionState(
+    (prevState: ActionResult | undefined, formData: FormData) =>
+      updateEmployeeAction(prevState, formData, employeeId || ""),
+    { success: false },
+  );
+
+  // 実際に使用するstateとactionを選択
+  const state = mode === "edit" ? updateState : createState;
+  const formAction = mode === "edit" ? updateFormAction : createFormAction;
+  const isPending = mode === "edit" ? updateIsPending : createIsPending;
+
+  // 編集成功時に社員詳細画面に遷移
+  useEffect(() => {
+    if (mode === "edit" && state.success && employeeId) {
+      router.push(`/employees/${employeeId}`);
+    }
+  }, [mode, state.success, employeeId, router]);
 
   // キャンセルボタンのハンドラー
   const handleCancel = () => {
