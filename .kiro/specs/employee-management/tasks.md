@@ -113,13 +113,13 @@
 
 ### 4. UIコンポーネント実装（shadcn/ui統合）
 
-- [ ] 4.1 shadcn/ui DialogとAlertDialogをインストール
+- [x] 4.1 shadcn/ui DialogとAlertDialogをインストール
   - `npx shadcn@latest add dialog`
   - `npx shadcn@latest add alert-dialog`
   - インストール確認（`components/ui/dialog.tsx`, `components/ui/alert-dialog.tsx`の生成確認）
   - _Requirements: 4.1, 4.2_
 
-- [ ] 4.2 削除確認ダイアログコンポーネントを実装
+- [x] 4.2 削除確認ダイアログコンポーネントを実装
   - `DeleteEmployeeDialog`: AlertDialogコンポーネントを使用
   - Props: `employeeId`, `employeeName`, `employeeNumber`
   - ダイアログ内に社員名と社員番号を表示
@@ -129,7 +129,7 @@
   - テストケース: ダイアログ開閉、削除確定ボタンクリック、キャンセルボタンクリック、ローディング状態表示
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 4.3 共通フォームコンポーネントを実装（新規追加・編集共用）
+- [x] 4.3 共通フォームコンポーネントを実装（新規追加・編集共用）
   - `EmployeeForm`: 新規追加・編集モードを切り替え可能
   - Props: `mode`（"create" | "edit"）、`initialData`（編集時のみ）、`employeeId`（編集時のみ）
   - `useActionState`で`createEmployeeAction`または`updateEmployeeAction`を呼び出し
