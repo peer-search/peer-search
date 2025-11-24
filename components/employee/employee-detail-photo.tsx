@@ -12,7 +12,7 @@ export function EmployeeDetailPhoto({ s3Key }: Props) {
 
   return (
     <div className="w-full max-w-md">
-      <div className="aspect-[3/4] bg-white flex items-center justify-center overflow-hidden rounded-lg shadow-md">
+      <div className="relative aspect-[3/4] bg-white flex items-center justify-center overflow-hidden rounded-lg shadow-md">
         {isLoading ? (
           <div
             data-testid="photo-skeleton"

@@ -43,7 +43,7 @@ export default async function EmployeeDetailPage({ params }: Props) {
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* 左カラム: 写真 */}
-        <div className="flex justify-center">
+        <div>
           <EmployeeDetailPhoto s3Key={employee.photoS3Key} />
         </div>
 

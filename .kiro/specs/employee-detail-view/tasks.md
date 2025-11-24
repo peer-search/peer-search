@@ -98,8 +98,8 @@
   - `s3Key`が`null`の場合にプレースホルダーが表示されることを検証
   - _Requirements: 3.2, 3.3, 3.4_
 
-- [ ] 4. 社員情報カードコンポーネントの実装 (P)
-- [ ] 4.1 (P) 社員情報カードコンポーネントの実装
+- [x] 4. 社員情報カードコンポーネントの実装 (P)
+- [x] 4.1 (P) 社員情報カードコンポーネントの実装
   - `components/employee/employee-detail-card.tsx`を実装（Client Component）
   - `"use client"`宣言、Props型定義（`employee: Employee`）
   - shadcn/ui Card（CardHeader、CardContent）使用
@@ -112,7 +112,7 @@
   - 各項目間に余白（`space-y-4`）
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-- [ ] 4.2 (P) 所属一覧表示機能の実装
+- [x] 4.2 (P) 所属一覧表示機能の実装
   - `employee-detail-card.tsx`内に所属一覧セクション追加
   - 所属が存在する場合は`ul`で複数行表示（`space-y-1`）
   - フォーマット: `{organizationPath}{position && ` (${position})`}`
@@ -120,7 +120,7 @@
   - 各所属を箇条書きで視覚的に区切り（`li`要素、`text-sm`）
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-- [ ] 4.3* (P) 社員情報カードコンポーネントのテスト
+- [x] 4.3* (P) 社員情報カードコンポーネントのテスト
   - `components/employee/employee-detail-card.test.tsx`を実装
   - モック社員データ作成（全フィールド含む）
   - 社員情報が正しく表示されることを検証（氏名、フリガナ、社員番号、入社年）
