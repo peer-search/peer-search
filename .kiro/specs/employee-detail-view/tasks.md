@@ -10,7 +10,7 @@
 
 ### フェーズ1: データレイヤー実装
 
-- [ ] 1. 単一社員取得機能の実装 (P)
+- [x] 1. 単一社員取得機能の実装 (P)
 - [x] 1.1 (P) 単一社員データ取得関数の実装
   - `lib/employees/service.ts`に`getEmployeeById()`関数を追加
   - Drizzle ORMでemployees、employee_organizations、organizationsをLEFT JOINクエリ
@@ -20,7 +20,7 @@
   - 存在しないemployeeIdの場合は`null`を返却
   - _Requirements: 1.1, 1.6, 1.7_
 
-- [ ] 1.2* (P) 単一社員取得関数のユニットテスト
+- [x] 1.2* (P) 単一社員取得関数のユニットテスト
   - `lib/employees/service.test.ts`にテストケース追加
   - 存在する社員IDで正しくデータ取得できることを検証
   - 存在しない社員IDで`null`が返却されることを検証
@@ -77,8 +77,8 @@
 
 ### フェーズ3: UIコンポーネント実装
 
-- [ ] 3. 社員写真表示コンポーネントの実装 (P)
-- [ ] 3.1 (P) 社員写真コンポーネントの実装
+- [x] 3. 社員写真表示コンポーネントの実装 (P)
+- [x] 3.1 (P) 社員写真コンポーネントの実装
   - `components/employee/employee-detail-photo.tsx`を実装（Client Component）
   - `"use client"`宣言、Props型定義（`s3Key: string | null`）
   - `usePresignedUrl(s3Key)`フックでPresigned URL取得
@@ -90,7 +90,7 @@
   - 角丸・影付き（`rounded-lg shadow-md`）
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.10_
 
-- [ ] 3.2* (P) 社員写真コンポーネントのテスト
+- [x] 3.2* (P) 社員写真コンポーネントのテスト
   - `components/employee/employee-detail-photo.test.tsx`を実装
   - `usePresignedUrl`フックをモック
   - ローディング中にスケルトンが表示されることを検証
