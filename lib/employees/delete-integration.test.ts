@@ -46,11 +46,10 @@ describe("社員削除フローの統合テスト", () => {
   };
 
   const mockAdminProfile: Profile = {
+    id: "prof-admin-123",
     userId: "admin-123",
     role: "admin",
-    displayName: "管理者",
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -126,11 +125,10 @@ describe("社員削除フローの統合テスト", () => {
         created_at: new Date().toISOString(),
       };
       const generalUserProfile: Profile = {
+        id: "prof-user-456",
         userId: "user-456",
         role: "user",
-        displayName: "一般ユーザー",
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       vi.mocked(auth.getUser).mockResolvedValue(generalUser);

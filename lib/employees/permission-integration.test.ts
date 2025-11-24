@@ -40,11 +40,10 @@ describe("権限チェックの統合テスト", () => {
   };
 
   const mockGeneralUserProfile: Profile = {
+    id: "prof-user-456",
     userId: "user-456",
     role: "user",
-    displayName: "一般ユーザー",
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   const mockAdminUser: User = {
@@ -57,11 +56,10 @@ describe("権限チェックの統合テスト", () => {
   };
 
   const mockAdminProfile: Profile = {
+    id: "prof-admin-123",
     userId: "admin-123",
     role: "admin",
-    displayName: "管理者",
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   const mockEmployee: Employee = {
@@ -94,7 +92,8 @@ describe("権限チェックの統合テスト", () => {
 
       // ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
 
       // Assert: 権限チェックの結果
       expect(user).toBeDefined();
@@ -123,7 +122,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
 
       // Assert: 管理者はアクセス可能
       expect(user).toBeDefined();
@@ -175,7 +175,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
       const employee = await employeeService.getEmployeeById("emp-123");
 
@@ -199,7 +200,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
       const employee = await employeeService.getEmployeeById("emp-123");
 
@@ -231,7 +233,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート（?mode=edit でアクセス）
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
       const isEditMode = true; // mode === "edit"
       const employee = await employeeService.getEmployeeById("emp-123");
@@ -265,7 +268,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート（?mode=edit でアクセス）
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
       const isEditMode = true; // mode === "edit"
       const employee = await employeeService.getEmployeeById("emp-123");
@@ -299,7 +303,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート（mode指定なし = 表示モード）
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
       const isEditMode = false; // mode !== "edit"
       const employee = await employeeService.getEmployeeById("emp-123");
@@ -335,7 +340,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
 
       // Assert: 管理者の場合、isAdminはtrue
@@ -367,7 +373,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
 
       // Assert: 一般ユーザーの場合、isAdminはfalse
@@ -399,7 +406,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
 
       // 1. 社員詳細画面（表示モード）
@@ -439,7 +447,8 @@ describe("権限チェックの統合テスト", () => {
 
       // Act: ページロジックをシミュレート
       const user = await auth.getUser();
-      const profile = await profileService.getProfileByUserId(user!.id);
+      if (!user) throw new Error("User not found");
+      const profile = await profileService.getProfileByUserId(user.id);
       const isAdmin = profile?.role === "admin";
 
       // 1. 社員詳細画面（表示モード）

@@ -15,6 +15,9 @@ import {
 } from "./service";
 import type { CreateEmployeeInput } from "./types";
 
+// biome-ignore lint/suspicious/noExplicitAny: Mocking complex Drizzle ORM types requires any
+type MockChain = any;
+
 // Mock the database
 vi.mock("@/db", () => ({
   db: {
@@ -146,22 +149,26 @@ describe("getEmployeeById", () => {
     ];
 
     // Mock db.execute for WITH RECURSIVE queries (buildOrganizationPath)
-    vi.mocked(db.execute).mockImplementation(async (query: any) => {
-      const queryString = String(query);
+    (
+      vi.mocked(db.execute).mockImplementation as unknown as (
+        impl: (_query: unknown) => Promise<unknown>,
+      ) => void
+    )(async (_query: unknown) => {
+      const queryString = String(_query);
       if (queryString.includes("org1")) {
         return [
           { name: "ABC株式会社", level: 1 },
           { name: "技術本部", level: 2 },
-        ] as any;
+        ];
       }
       if (queryString.includes("org2")) {
         return [
           { name: "ABC株式会社", level: 1 },
           { name: "技術本部", level: 2 },
           { name: "開発部", level: 3 },
-        ] as any;
+        ];
       }
-      return [] as any;
+      return [];
     });
 
     // Mock db.select chain
@@ -171,7 +178,7 @@ describe("getEmployeeById", () => {
       where: vi.fn().mockResolvedValue(mockRows),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Execute
     const employee = await getEmployeeById(mockEmployeeId);
@@ -203,7 +210,7 @@ describe("getEmployeeById", () => {
       where: vi.fn().mockResolvedValue([]),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Execute
     const employee = await getEmployeeById(mockEmployeeId);
@@ -231,12 +238,16 @@ describe("getEmployeeById", () => {
     ];
 
     // Mock buildOrganizationPath to return full path
-    vi.mocked(db.execute).mockResolvedValue([
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
       { name: "ABC株式会社", level: 1 },
       { name: "技術本部", level: 2 },
       { name: "開発部", level: 3 },
       { name: "第一課", level: 4 },
-    ] as any);
+    ]);
 
     const mockSelect = {
       from: vi.fn().mockReturnThis(),
@@ -244,7 +255,7 @@ describe("getEmployeeById", () => {
       where: vi.fn().mockResolvedValue(mockRows),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Execute
     const employee = await getEmployeeById(mockEmployeeId);
@@ -280,7 +291,7 @@ describe("getEmployeeById", () => {
       where: vi.fn().mockResolvedValue(mockRows),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Execute
     const employee = await getEmployeeById(mockEmployeeId);
@@ -318,7 +329,7 @@ describe("createEmployee", () => {
         await db
           .delete(employees)
           .where(eq(employees.email, validEmployeeData.email));
-      } catch (error) {
+      } catch (_error) {
         // エラーは無視（データが存在しない場合）
       }
     }
@@ -339,12 +350,11 @@ describe("createEmployee", () => {
           mobilePhone: validEmployeeData.mobilePhone,
           photoS3Key: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]),
     };
 
-    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as MockChain;
 
     // Act
     const result = await createEmployee(validEmployeeData);
@@ -383,12 +393,11 @@ describe("createEmployee", () => {
           mobilePhone: null,
           photoS3Key: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]),
     };
 
-    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as MockChain;
 
     // Act
     const result = await createEmployee(dataWithoutPhone);
@@ -412,7 +421,7 @@ describe("createEmployee", () => {
       ),
     };
 
-    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as MockChain;
 
     // Act & Assert
     await expect(createEmployee(validEmployeeData)).rejects.toThrow();
@@ -433,7 +442,7 @@ describe("createEmployee", () => {
       ),
     };
 
-    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as MockChain;
 
     // Act & Assert
     await expect(createEmployee(validEmployeeData)).rejects.toThrow();
@@ -454,12 +463,11 @@ describe("createEmployee", () => {
           mobilePhone: validEmployeeData.mobilePhone,
           photoS3Key: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]),
     };
 
-    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as any;
+    vi.mocked(db).insert = vi.fn().mockReturnValue(mockInsert) as MockChain;
 
     // Act
     const result = await createEmployee(validEmployeeData);
@@ -503,12 +511,11 @@ describe("updateEmployee", () => {
           mobilePhone: updateData.mobilePhone,
           photoS3Key: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]),
     };
 
-    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as MockChain;
 
     // モックの設定: getEmployeeById (内部で呼び出される)
     const mockSelect = {
@@ -531,7 +538,7 @@ describe("updateEmployee", () => {
       ]),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Act
     const result = await updateEmployee(mockEmployeeId, updateData);
@@ -553,7 +560,7 @@ describe("updateEmployee", () => {
       returning: vi.fn().mockResolvedValue([]),
     };
 
-    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as MockChain;
 
     // Act & Assert
     await expect(
@@ -577,7 +584,7 @@ describe("updateEmployee", () => {
       ),
     };
 
-    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as MockChain;
 
     // Act & Assert
     await expect(
@@ -605,12 +612,11 @@ describe("updateEmployee", () => {
           mobilePhone: null,
           photoS3Key: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]),
     };
 
-    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as any;
+    vi.mocked(db).update = vi.fn().mockReturnValue(mockUpdate) as MockChain;
 
     // モックの設定: getEmployeeById
     const mockSelect = {
@@ -633,7 +639,7 @@ describe("updateEmployee", () => {
       ]),
     };
 
-    vi.mocked(db.select).mockReturnValue(mockSelect as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
 
     // Act
     const result = await updateEmployee(mockEmployeeId, updateData);
@@ -657,7 +663,7 @@ describe("deleteEmployee", () => {
       returning: vi.fn().mockResolvedValue([{ id: mockEmployeeId }]),
     };
 
-    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as MockChain;
 
     // Act & Assert (エラーがスローされないことを確認)
     await expect(deleteEmployee(mockEmployeeId)).resolves.toBeUndefined();
@@ -670,7 +676,7 @@ describe("deleteEmployee", () => {
       returning: vi.fn().mockResolvedValue([]),
     };
 
-    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as MockChain;
 
     // Act & Assert
     await expect(deleteEmployee("nonexistent-id")).rejects.toThrow(
@@ -689,7 +695,7 @@ describe("deleteEmployee", () => {
       returning: vi.fn().mockResolvedValue([{ id: mockEmployeeId }]),
     };
 
-    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as any;
+    vi.mocked(db).delete = vi.fn().mockReturnValue(mockDelete) as MockChain;
 
     // Act
     await deleteEmployee(mockEmployeeId);

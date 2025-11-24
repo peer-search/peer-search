@@ -261,7 +261,7 @@
   - ユーザーインタラクションテスト
   - _Requirements: 10.1, 10.5, 10.6_
 
-- [ ] 8.5 TypeScript strictモード準拠とBiomeリントチェック
+- [x] 8.5 TypeScript strictモード準拠とBiomeリントチェック
   - 全ファイルでTypeScript strictモード準拠確認
   - `any`使用箇所の排除
   - Biomeによるリント・フォーマットチェック通過
