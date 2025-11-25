@@ -12,19 +12,22 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
 **Example**:
 ```
 /app/
-  layout.tsx           # Root layout (RSC)
-  page.tsx             # Home page
-  login/page.tsx       # /login route
-  employees/page.tsx   # /employees route
+  layout.tsx                  # Root layout (RSC)
+  page.tsx                    # Home page
+  login/page.tsx              # /login route
+  employees/
+    page.tsx                  # /employees route (list view)
+    new/page.tsx              # /employees/new (create)
+    [employeeId]/page.tsx     # /employees/:id (detail/edit)
   api/
-    auth/callback/     # OAuth callback
-    s3/presign/        # S3 presigned URL API
+    auth/callback/            # OAuth callback
+    s3/presign/               # S3 presigned URL API
 ```
 
 ### UI Components (`/components/ui/`)
 **Purpose**: 再利用可能なデザインシステムコンポーネント
 **Pattern**: shadcn/uiで管理、1コンポーネント1ファイル
-**Example**: `button.tsx`, `card.tsx`, `input.tsx`, `label.tsx`
+**Example**: `button.tsx`, `card.tsx`, `input.tsx`, `label.tsx`, `dialog.tsx`, `alert-dialog.tsx`, `skeleton.tsx`, `select.tsx`, `checkbox.tsx`, `radio-group.tsx`, `dropdown-menu.tsx`, `avatar.tsx`, `sheet.tsx`
 
 ### Feature Components (`/components/{feature}/`)
 **Purpose**: 機能固有のビジネスコンポーネント
@@ -41,6 +44,11 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     employee-card.tsx
     employee-card.test.tsx
     employee-card-list.tsx
+    employee-detail-card.tsx      # Detail view card
+    employee-detail-photo.tsx     # Detail view photo
+    employee-form.tsx             # Create/Edit form
+    employee-photo.tsx            # Photo component
+    delete-employee-dialog.tsx    # Delete confirmation
     search-form.tsx
     sort-controls.tsx
   layout/
@@ -66,9 +74,15 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     service.ts
     tree.ts
     tree.test.ts
-  employees/           # Employee search logic
+  employees/           # Employee CRUD & search logic
     service.ts
     service.test.ts
+    actions.ts           # Server Actions (create/update/delete)
+    actions.test.ts
+    validation.ts        # Validation logic
+    validation.test.ts
+    types.ts             # Employee type definitions
+    integration.test.ts  # Integration tests
   profiles/            # User profile & permissions
     service.ts
     service.test.ts
@@ -145,6 +159,7 @@ import "./globals.css";
 - デフォルトでServer Components使用
 - Client Componentsは明示的に`"use client"`宣言
 - データフェッチはサーバーサイドで完結
+- Server Actionsでデータ変更操作（CRUD）を実装（`"use server"`ディレクティブ）
 
 ### Auth Layer Separation
 - 認証ロジックは`/lib/supabase-auth/`に集約
