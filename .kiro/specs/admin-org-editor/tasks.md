@@ -35,14 +35,14 @@
   - _Requirements: 8.3, 8.5_
 
 ### 4. Server Actions実装
-- [ ] 4.1 管理者権限チェックヘルパーを作成
+- [x] 4.1 管理者権限チェックヘルパーを作成
   - `lib/organizations/actions.ts`を新規作成し、`"use server"`ディレクティブを追加
   - `checkAdminPermission()`関数を実装（`lib/employees/actions.ts`のパターンを再利用）
   - `getUser()`でユーザー取得、`getProfileByUserId()`で権限確認
   - 権限なしの場合、`Error("Forbidden")`をスロー
   - _Requirements: 2.4, 14.2_
 
-- [ ] 4.2 組織追加のServer Actionを実装
+- [x] 4.2 組織追加のServer Actionを実装
   - `createOrganizationAction(data: CreateOrganizationInput)`を追加
   - 名称バリデーション（空文字列チェック、255文字制限）
   - 親組織の階層レベル取得と新規ノードのレベル計算（親のレベル+1）
@@ -51,7 +51,7 @@
   - `revalidatePath('/admin/organizations')`実行
   - _Requirements: 6.2, 6.3, 6.7, 9.1, 9.2, 9.4, 14.1, 14.4_
 
-- [ ] 4.3 組織編集のServer Actionを実装
+- [x] 4.3 組織編集のServer Actionを実装
   - `updateOrganizationAction(data: UpdateOrganizationInput)`を追加
   - 名称バリデーション（空文字列チェック、255文字制限）
   - 循環参照チェック（`validateParentSelection()`を利用）
