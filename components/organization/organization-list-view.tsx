@@ -16,30 +16,38 @@ interface OrganizationListViewProps {
 export function OrganizationListView({
   organizations,
 }: OrganizationListViewProps) {
-  const { selectedNode, setSelectedNode } = useOrganizationSelection();
+  const { selectedNode, setSelectedNode, allOrganizations } =
+    useOrganizationSelection();
 
-  // ツリー構造をフラット配列に変換
+  // ツリー構造をフラット配列に変換（parentIdも含む）
   const flatNodes = flattenTree(organizations);
 
   return (
     <div className="w-full md:w-1/3 border-r overflow-auto">
-      {flatNodes.map((node) => (
-        <OrganizationListItem
-          key={node.id}
-          node={node}
-          isSelected={selectedNode?.id === node.id}
-          onSelect={() =>
-            setSelectedNode({
-              id: node.id,
-              name: node.name,
-              parentId: null, // TODO: Calculate parentId from tree structure
-              level: node.level,
-              createdAt: new Date(), // TODO: Get from actual data
-              updatedAt: new Date(), // TODO: Get from actual data
-            })
-          }
-        />
-      ))}
+      {flatNodes.map((node) => {
+        // allOrganizationsから完全なノード情報を取得
+        const fullNode = allOrganizations.find((org) => org.id === node.id);
+
+        return (
+          <OrganizationListItem
+            key={node.id}
+            node={node}
+            isSelected={selectedNode?.id === node.id}
+            onSelect={() =>
+              setSelectedNode(
+                fullNode || {
+                  id: node.id,
+                  name: node.name,
+                  parentId: node.parentId,
+                  level: node.level,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                },
+              )
+            }
+          />
+        );
+      })}
     </div>
   );
 }

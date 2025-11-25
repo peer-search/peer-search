@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { OrganizationFlatNode } from "@/lib/organizations/types";
 import { OrganizationProvider } from "./organization-context";
 import { OrganizationEditPanel } from "./organization-edit-panel";
 
@@ -7,17 +8,32 @@ import { OrganizationEditPanel } from "./organization-edit-panel";
 vi.mock("@/lib/organizations/actions", () => ({
   updateOrganizationAction: vi.fn(),
   deleteOrganizationAction: vi.fn(),
+  getDescendantCountAction: vi.fn().mockResolvedValue(0),
 }));
 
-// Mock service functions
-vi.mock("@/lib/organizations/service", () => ({
-  getDescendantCount: vi.fn().mockResolvedValue(0),
-}));
+const mockOrganizations: OrganizationFlatNode[] = [
+  {
+    id: "org-1",
+    name: "テスト組織1",
+    parentId: null,
+    level: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "org-2",
+    name: "テスト組織2",
+    parentId: null,
+    level: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
 describe("OrganizationEditPanel", () => {
   it("should display placeholder message when no node is selected", () => {
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={mockOrganizations}>
         <OrganizationEditPanel />
       </OrganizationProvider>,
     );
@@ -29,7 +45,7 @@ describe("OrganizationEditPanel", () => {
     // This test will be expanded once OrganizationEditForm is implemented
     // For now, we just verify the component structure
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={mockOrganizations}>
         <OrganizationEditPanel />
       </OrganizationProvider>,
     );

@@ -216,7 +216,7 @@ describe("UserMenu Component", () => {
       expect(mockPush).toHaveBeenCalledWith("/employees/new");
     });
 
-    it("should navigate to /admin/departments when 部署編集 is clicked", async () => {
+    it("should navigate to /admin/organizations when 部署編集 is clicked", async () => {
       const user = userEvent.setup();
       render(<UserMenu user={mockUser} isAdmin={true} />);
 
@@ -230,7 +230,7 @@ describe("UserMenu Component", () => {
       });
       await user.click(editDepartmentsItem);
 
-      expect(mockPush).toHaveBeenCalledWith("/admin/departments");
+      expect(mockPush).toHaveBeenCalledWith("/admin/organizations");
     });
   });
 });

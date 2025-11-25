@@ -1,22 +1,29 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { OrganizationFlatNode } from "@/lib/organizations/types";
 
 /**
  * 組織選択状態を管理するContext
  * @property selectedNode - 現在選択されている組織ノード（未選択時はnull）
  * @property setSelectedNode - 組織ノードの選択状態を更新する関数
+ * @property allOrganizations - 全組織のリスト
  */
 interface OrganizationContextValue {
   selectedNode: OrganizationFlatNode | null;
   setSelectedNode: (node: OrganizationFlatNode | null) => void;
+  allOrganizations: OrganizationFlatNode[];
 }
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(
   null,
 );
+
+interface OrganizationProviderProps {
+  children: ReactNode;
+  allOrganizations: OrganizationFlatNode[];
+}
 
 /**
  * 組織選択状態を提供するProviderコンポーネント
@@ -27,22 +34,31 @@ const OrganizationContext = createContext<OrganizationContextValue | null>(
  *
  * @example
  * ```tsx
- * <OrganizationProvider>
+ * <OrganizationProvider allOrganizations={flatOrganizations}>
  *   <OrganizationListView />
  *   <OrganizationEditPanel />
  * </OrganizationProvider>
  * ```
  *
  * @param children - Providerでラップする子コンポーネント
+ * @param allOrganizations - 全組織のフラットリスト
  * @returns Context.Providerでラップされたコンポーネントツリー
  */
-export function OrganizationProvider({ children }: { children: ReactNode }) {
+export function OrganizationProvider({
+  children,
+  allOrganizations,
+}: OrganizationProviderProps) {
   const [selectedNode, setSelectedNode] = useState<OrganizationFlatNode | null>(
     null,
   );
 
+  const value = useMemo(
+    () => ({ selectedNode, setSelectedNode, allOrganizations }),
+    [selectedNode, allOrganizations],
+  );
+
   return (
-    <OrganizationContext.Provider value={{ selectedNode, setSelectedNode }}>
+    <OrganizationContext.Provider value={value}>
       {children}
     </OrganizationContext.Provider>
   );

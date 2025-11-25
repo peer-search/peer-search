@@ -214,6 +214,23 @@ export async function updateOrganizationAction(
 }
 
 /**
+ * 子孫ノード数を取得するServer Action
+ * @param nodeId - 対象ノードのID
+ * @returns 子孫ノード数
+ */
+export async function getDescendantCountAction(
+  nodeId: string,
+): Promise<number> {
+  try {
+    const { getDescendantCount } = await import("./service");
+    return await getDescendantCount(nodeId);
+  } catch (error) {
+    console.error("getDescendantCountAction error:", error);
+    return 0;
+  }
+}
+
+/**
  * 組織削除のServer Action
  * @param id - 削除する組織のID
  * @returns ActionResult

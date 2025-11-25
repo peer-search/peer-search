@@ -1,11 +1,41 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import type { OrganizationTree } from "@/lib/organizations/types";
+import type {
+  OrganizationFlatNode,
+  OrganizationTree,
+} from "@/lib/organizations/types";
 import { OrganizationProvider } from "./organization-context";
 import { OrganizationListView } from "./organization-list-view";
 
 describe("OrganizationListView", () => {
+  const mockAllOrganizations: OrganizationFlatNode[] = [
+    {
+      id: "org-1",
+      name: "会社A",
+      parentId: null,
+      level: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "org-2",
+      name: "本部B",
+      parentId: "org-1",
+      level: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "org-3",
+      name: "部署C",
+      parentId: "org-2",
+      level: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
   const mockOrganizations: OrganizationTree[] = [
     {
       id: "org-1",
@@ -31,7 +61,7 @@ describe("OrganizationListView", () => {
 
   it("should render all organization nodes in depth-first order", () => {
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
         <OrganizationListView organizations={mockOrganizations} />
       </OrganizationProvider>,
     );
@@ -43,7 +73,7 @@ describe("OrganizationListView", () => {
 
   it("should handle empty organizations array", () => {
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={[]}>
         <OrganizationListView organizations={[]} />
       </OrganizationProvider>,
     );
@@ -56,7 +86,7 @@ describe("OrganizationListView", () => {
     const user = userEvent.setup();
 
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
         <OrganizationListView organizations={mockOrganizations} />
       </OrganizationProvider>,
     );
@@ -70,7 +100,7 @@ describe("OrganizationListView", () => {
 
   it("should render nodes with proper hierarchy indentation", () => {
     render(
-      <OrganizationProvider>
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
         <OrganizationListView organizations={mockOrganizations} />
       </OrganizationProvider>,
     );

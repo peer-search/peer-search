@@ -9,7 +9,7 @@ import { OrganizationEditForm } from "./organization-edit-form";
  * 未選択時は選択を促すメッセージを表示
  */
 export function OrganizationEditPanel() {
-  const { selectedNode } = useOrganizationSelection();
+  const { selectedNode, allOrganizations } = useOrganizationSelection();
 
   if (!selectedNode) {
     return (
@@ -21,7 +21,10 @@ export function OrganizationEditPanel() {
 
   return (
     <div className="flex-1 p-6">
-      <OrganizationEditForm node={selectedNode} />
+      <OrganizationEditForm
+        node={selectedNode}
+        allOrganizations={allOrganizations}
+      />
     </div>
   );
 }

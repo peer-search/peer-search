@@ -79,7 +79,7 @@ export function UserMenu({ user, isAdmin }: UserMenuProps) {
               <span>社員追加</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handleNavigation("/admin/departments")}
+              onClick={() => handleNavigation("/admin/organizations")}
             >
               <Building2 className="mr-2 h-4 w-4" />
               <span>部署編集</span>

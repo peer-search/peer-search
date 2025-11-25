@@ -13,8 +13,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteOrganizationAction } from "@/lib/organizations/actions";
-import { getDescendantCount } from "@/lib/organizations/service";
+import {
+  deleteOrganizationAction,
+  getDescendantCountAction,
+} from "@/lib/organizations/actions";
 import type { OrganizationFlatNode } from "@/lib/organizations/types";
 
 interface DeleteOrganizationDialogProps {
@@ -35,7 +37,7 @@ export function DeleteOrganizationDialog({
   // ダイアログが開かれたときに子孫ノード数を取得
   useEffect(() => {
     if (isOpen) {
-      getDescendantCount(node.id).then(setDescendantCount);
+      getDescendantCountAction(node.id).then(setDescendantCount);
     }
   }, [isOpen, node.id]);
 

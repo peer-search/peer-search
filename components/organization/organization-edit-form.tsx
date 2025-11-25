@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,17 +17,55 @@ import { DeleteOrganizationDialog } from "./delete-organization-dialog";
 
 interface OrganizationEditFormProps {
   node: OrganizationFlatNode;
+  allOrganizations: OrganizationFlatNode[];
 }
 
 /**
  * 組織編集フォームコンポーネント
  * 名称・親組織の編集フォーム、バリデーション、Server Action呼び出し
  */
-export function OrganizationEditForm({ node }: OrganizationEditFormProps) {
+export function OrganizationEditForm({
+  node,
+  allOrganizations,
+}: OrganizationEditFormProps) {
   const [name, setName] = useState(node.name);
   const [parentId, setParentId] = useState<string | null>(node.parentId);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // nodeが変更されたときにフォームの状態を同期
+  useEffect(() => {
+    setName(node.name);
+    setParentId(node.parentId);
+    setError(null);
+  }, [node.name, node.parentId]);
+
+  // 子孫ノードのIDを取得（自分自身と子孫を親組織として選択できないようにする）
+  // BFS（幅優先探索）で全子孫を探索
+  const descendantIds = useMemo(() => {
+    const descendants = new Set<string>();
+    const queue = [node.id];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId) break;
+      descendants.add(currentId); // 自分自身も含める
+
+      // この組織を親とする子組織を探す
+      const children = allOrganizations.filter(
+        (org) => org.parentId === currentId,
+      );
+
+      queue.push(...children.map((child) => child.id));
+    }
+
+    return descendants;
+  }, [node.id, allOrganizations]);
+
+  // 利用可能な親組織のリスト（自分自身と子孫を除外）
+  const availableParents = useMemo(() => {
+    return allOrganizations.filter((org) => !descendantIds.has(org.id));
+  }, [allOrganizations, descendantIds]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +124,12 @@ export function OrganizationEditForm({ node }: OrganizationEditFormProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__none__">なし（ルート組織）</SelectItem>
-            {/* TODO: Add available parent options excluding self and descendants */}
+            {availableParents.map((org) => (
+              <SelectItem key={org.id} value={org.id}>
+                {"　".repeat(org.level - 1)}
+                {org.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

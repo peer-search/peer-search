@@ -112,7 +112,7 @@
   - _Requirements: 8.1, 8.2, 8.3, 11.3_
 
 ### 7. ページコンポーネント実装
-- [ ] 7.1 管理者専用組織管理ページを作成
+- [x] 7.1 管理者専用組織管理ページを作成
   - `/app/admin/organizations/page.tsx`を新規作成（Server Component）
   - `getUser()`で認証チェック、未認証時は`/login`にリダイレクト
   - `getProfileByUserId()`で管理者権限チェック、権限なしの場合403エラー
@@ -120,17 +120,17 @@
   - `OrganizationProvider`でラップし、2カラムレイアウト（左: リスト、右: 編集パネル）を表示
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 15.1, 15.2_
 
-- [ ] 7.2 (P) ローディング状態ページを作成
+- [x] 7.2 (P) ローディング状態ページを作成
   - `/app/admin/organizations/loading.tsx`を新規作成
   - ローディングインジケーター（スピナーまたはスケルトンUI）を表示
   - _Requirements: 11.1, 11.4_
 
-- [ ] 7.3 (P) エラー状態ページを作成
+- [x] 7.3 (P) エラー状態ページを作成
   - `/app/admin/organizations/error.tsx`を新規作成（Client Component）
   - エラーメッセージ表示と再試行ボタンを実装
   - _Requirements: 11.2, 11.4_
 
-- [ ] 7.4 (P) ページメタデータを設定
+- [x] 7.4 (P) ページメタデータを設定
   - `page.tsx`に`metadata`エクスポートを追加
   - `title: "組織管理 | Peer Search"`, `robots: "noindex, nofollow"`を設定
   - _Requirements: 15.3, 15.4, 15.5_

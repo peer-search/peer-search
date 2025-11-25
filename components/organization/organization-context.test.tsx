@@ -8,10 +8,29 @@ import {
 } from "./organization-context";
 
 describe("OrganizationContext", () => {
+  const mockOrganizations: OrganizationFlatNode[] = [
+    {
+      id: "org-1",
+      name: "テスト組織1",
+      parentId: null,
+      level: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "org-2",
+      name: "テスト組織2",
+      parentId: "org-1",
+      level: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
   describe("OrganizationProvider", () => {
     it("should render children", () => {
       render(
-        <OrganizationProvider>
+        <OrganizationProvider allOrganizations={mockOrganizations}>
           <div>Test Child</div>
         </OrganizationProvider>,
       );
@@ -47,7 +66,7 @@ describe("OrganizationContext", () => {
       };
 
       render(
-        <OrganizationProvider>
+        <OrganizationProvider allOrganizations={mockOrganizations}>
           <TestComponent />
         </OrganizationProvider>,
       );
@@ -82,7 +101,7 @@ describe("OrganizationContext", () => {
       };
 
       render(
-        <OrganizationProvider>
+        <OrganizationProvider allOrganizations={mockOrganizations}>
           <TestComponent />
         </OrganizationProvider>,
       );
@@ -131,7 +150,7 @@ describe("OrganizationContext", () => {
       };
 
       render(
-        <OrganizationProvider>
+        <OrganizationProvider allOrganizations={mockOrganizations}>
           <TestComponent />
         </OrganizationProvider>,
       );

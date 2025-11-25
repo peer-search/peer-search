@@ -116,7 +116,7 @@ export async function getDescendantIds(nodeId: string): Promise<string[]> {
     SELECT id FROM descendants
   `);
 
-  return result.rows.map((row) => row.id);
+  return (result as unknown as { id: string }[]).map((row) => row.id);
 }
 
 /**

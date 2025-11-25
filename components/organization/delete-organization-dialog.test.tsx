@@ -7,11 +7,7 @@ import { DeleteOrganizationDialog } from "./delete-organization-dialog";
 // Mock Server Actions
 vi.mock("@/lib/organizations/actions", () => ({
   deleteOrganizationAction: vi.fn(),
-}));
-
-// Mock service functions
-vi.mock("@/lib/organizations/service", () => ({
-  getDescendantCount: vi.fn(),
+  getDescendantCountAction: vi.fn(),
 }));
 
 describe("DeleteOrganizationDialog", () => {
@@ -31,8 +27,10 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should show confirmation dialog when delete button is clicked", async () => {
     const user = userEvent.setup();
-    const { getDescendantCount } = await import("@/lib/organizations/service");
-    vi.mocked(getDescendantCount).mockResolvedValue(0);
+    const { getDescendantCountAction } = await import(
+      "@/lib/organizations/actions"
+    );
+    vi.mocked(getDescendantCountAction).mockResolvedValue(0);
 
     render(<DeleteOrganizationDialog node={mockNode} />);
 
@@ -46,8 +44,10 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should show warning message when node has descendants", async () => {
     const user = userEvent.setup();
-    const { getDescendantCount } = await import("@/lib/organizations/service");
-    vi.mocked(getDescendantCount).mockResolvedValue(3);
+    const { getDescendantCountAction } = await import(
+      "@/lib/organizations/actions"
+    );
+    vi.mocked(getDescendantCountAction).mockResolvedValue(3);
 
     render(<DeleteOrganizationDialog node={mockNode} />);
 
@@ -63,12 +63,11 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should call deleteOrganizationAction when confirmed", async () => {
     const user = userEvent.setup();
-    const { deleteOrganizationAction } = await import(
+    const { deleteOrganizationAction, getDescendantCountAction } = await import(
       "@/lib/organizations/actions"
     );
-    const { getDescendantCount } = await import("@/lib/organizations/service");
 
-    vi.mocked(getDescendantCount).mockResolvedValue(0);
+    vi.mocked(getDescendantCountAction).mockResolvedValue(0);
     vi.mocked(deleteOrganizationAction).mockResolvedValue({ success: true });
 
     render(<DeleteOrganizationDialog node={mockNode} />);
@@ -92,8 +91,10 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should close dialog when cancel is clicked", async () => {
     const user = userEvent.setup();
-    const { getDescendantCount } = await import("@/lib/organizations/service");
-    vi.mocked(getDescendantCount).mockResolvedValue(0);
+    const { getDescendantCountAction } = await import(
+      "@/lib/organizations/actions"
+    );
+    vi.mocked(getDescendantCountAction).mockResolvedValue(0);
 
     render(<DeleteOrganizationDialog node={mockNode} />);
 
@@ -117,12 +118,11 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should show error alert when deletion fails", async () => {
     const user = userEvent.setup();
-    const { deleteOrganizationAction } = await import(
+    const { deleteOrganizationAction, getDescendantCountAction } = await import(
       "@/lib/organizations/actions"
     );
-    const { getDescendantCount } = await import("@/lib/organizations/service");
 
-    vi.mocked(getDescendantCount).mockResolvedValue(0);
+    vi.mocked(getDescendantCountAction).mockResolvedValue(0);
     vi.mocked(deleteOrganizationAction).mockResolvedValue({
       success: false,
       error: "削除に失敗しました",
@@ -155,12 +155,11 @@ describe("DeleteOrganizationDialog", () => {
 
   it("should properly handle delete confirmation flow", async () => {
     const user = userEvent.setup();
-    const { deleteOrganizationAction } = await import(
+    const { deleteOrganizationAction, getDescendantCountAction } = await import(
       "@/lib/organizations/actions"
     );
-    const { getDescendantCount } = await import("@/lib/organizations/service");
 
-    vi.mocked(getDescendantCount).mockResolvedValue(0);
+    vi.mocked(getDescendantCountAction).mockResolvedValue(0);
     vi.mocked(deleteOrganizationAction).mockResolvedValue({ success: true });
 
     render(<DeleteOrganizationDialog node={mockNode} />);

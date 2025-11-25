@@ -76,7 +76,7 @@ export function buildTree(
  * ツリー構造の組織階層データをフラット配列に変換する（深さ優先順序）
  *
  * @param tree - ツリー構造の組織階層データ
- * @returns フラット配列の組織階層データ（階層情報のみ、parentIdなどは含まない）
+ * @returns フラット配列の組織階層データ（parentIdも含む）
  *
  * @example
  * const tree = [
@@ -89,28 +89,34 @@ export function buildTree(
  * ];
  * const flat = flattenTree(tree);
  * // => [
- * //   { id: '1', name: '会社A', level: 1 },
- * //   { id: '2', name: '本部B', level: 2 }
+ * //   { id: '1', name: '会社A', level: 1, parentId: null },
+ * //   { id: '2', name: '本部B', level: 2, parentId: '1' }
  * // ]
  */
 export function flattenTree(
   tree: OrganizationTree[],
-): Array<{ id: string; name: string; level: number }> {
-  const result: Array<{ id: string; name: string; level: number }> = [];
+): Array<{ id: string; name: string; level: number; parentId: string | null }> {
+  const result: Array<{
+    id: string;
+    name: string;
+    level: number;
+    parentId: string | null;
+  }> = [];
 
   // 深さ優先探索で再帰的にツリーをフラット化
-  function traverse(nodes: OrganizationTree[]) {
+  function traverse(nodes: OrganizationTree[], parentId: string | null = null) {
     for (const node of nodes) {
       // 現在のノードを結果配列に追加
       result.push({
         id: node.id,
         name: node.name,
         level: node.level,
+        parentId,
       });
 
-      // 子ノードがある場合、再帰的に処理
+      // 子ノードがある場合、再帰的に処理（現在のノードIDを親IDとして渡す）
       if (node.children.length > 0) {
-        traverse(node.children);
+        traverse(node.children, node.id);
       }
     }
   }

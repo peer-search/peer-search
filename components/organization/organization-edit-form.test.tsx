@@ -25,14 +25,44 @@ describe("OrganizationEditForm", () => {
     updatedAt: new Date("2024-01-01"),
   };
 
+  const mockAllOrganizations: OrganizationFlatNode[] = [
+    mockNode,
+    {
+      id: "org-2",
+      name: "テスト組織2",
+      parentId: null,
+      level: 1,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+    },
+    {
+      id: "org-3",
+      name: "テスト組織3",
+      parentId: "org-1",
+      level: 2,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+    },
+  ];
+
   it("should display organization name", () => {
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
     expect(screen.getByDisplayValue("テスト組織")).toBeInTheDocument();
   });
 
   it("should show validation error for empty name", async () => {
     const user = userEvent.setup();
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
 
     const nameInput = screen.getByLabelText("名称");
     await user.clear(nameInput);
@@ -46,7 +76,12 @@ describe("OrganizationEditForm", () => {
   });
 
   it("should prevent entering more than 255 characters via maxLength", () => {
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
 
     const nameInput = screen.getByLabelText("名称") as HTMLInputElement;
 
@@ -64,7 +99,12 @@ describe("OrganizationEditForm", () => {
     );
     vi.mocked(updateOrganizationAction).mockResolvedValue({ success: true });
 
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
 
     const nameInput = screen.getByLabelText("名称");
     await user.clear(nameInput);
@@ -92,7 +132,12 @@ describe("OrganizationEditForm", () => {
       error: "更新に失敗しました",
     });
 
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
 
     const submitButton = screen.getByRole("button", { name: /更新/ });
     await user.click(submitButton);
@@ -114,7 +159,12 @@ describe("OrganizationEditForm", () => {
         ),
     );
 
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
 
     const submitButton = screen.getByRole("button", { name: /更新/ });
     await user.click(submitButton);
@@ -125,13 +175,139 @@ describe("OrganizationEditForm", () => {
   });
 
   it("should render parent organization select field", () => {
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
     expect(screen.getByLabelText("親組織")).toBeInTheDocument();
   });
 
   it("should enforce maxLength of 255 characters on name input", () => {
-    render(<OrganizationEditForm node={mockNode} />);
+    render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
     const nameInput = screen.getByLabelText("名称") as HTMLInputElement;
     expect(nameInput.maxLength).toBe(255);
+  });
+
+  it("should update form values when node prop changes", () => {
+    const { rerender } = render(
+      <OrganizationEditForm
+        node={mockNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
+
+    // Initial values
+    expect(screen.getByDisplayValue("テスト組織")).toBeInTheDocument();
+
+    // Change node prop
+    const updatedNode: OrganizationFlatNode = {
+      id: "org-2",
+      name: "更新された組織",
+      parentId: "parent-1",
+      level: 2,
+      createdAt: new Date("2024-01-02"),
+      updatedAt: new Date("2024-01-02"),
+    };
+
+    rerender(
+      <OrganizationEditForm
+        node={updatedNode}
+        allOrganizations={mockAllOrganizations}
+      />,
+    );
+
+    // Values should be updated
+    expect(screen.getByDisplayValue("更新された組織")).toBeInTheDocument();
+  });
+
+  it("should exclude self and descendants from parent organization select options", () => {
+    const allOrgs: OrganizationFlatNode[] = [
+      {
+        id: "org-1",
+        name: "親組織",
+        parentId: null,
+        level: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "org-2",
+        name: "自分",
+        parentId: "org-1",
+        level: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "org-3",
+        name: "子組織",
+        parentId: "org-2",
+        level: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "org-4",
+        name: "孫組織",
+        parentId: "org-3",
+        level: 4,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "org-5",
+        name: "別の組織",
+        parentId: null,
+        level: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    const currentNode = allOrgs[1]; // "自分"
+
+    const { container } = render(
+      <OrganizationEditForm node={currentNode} allOrganizations={allOrgs} />,
+    );
+
+    // SelectContentのhidden selectを確認（shadcn/uiの内部実装）
+    const hiddenSelect = container.querySelector("select");
+    expect(hiddenSelect).toBeInTheDocument();
+
+    // 選択肢を確認
+    const options = Array.from(
+      hiddenSelect?.querySelectorAll("option") || [],
+    ).map((opt) => ({
+      value: opt.getAttribute("value"),
+      text: opt.textContent,
+    }));
+
+    // 正しい選択肢が存在することを確認
+    expect(options).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: "__none__",
+          text: "なし（ルート組織）",
+        }),
+        expect.objectContaining({ value: "org-1", text: "親組織" }),
+        expect.objectContaining({ value: "org-5", text: "別の組織" }),
+      ]),
+    );
+
+    // 選択肢が3つしかないことを確認（なし + 親組織 + 別の組織）
+    expect(options).toHaveLength(3);
+
+    // 自分自身と子孫が含まれていないことを確認
+    const optionValues = options.map((opt) => opt.value);
+    expect(optionValues).not.toContain("org-2"); // 自分
+    expect(optionValues).not.toContain("org-3"); // 子組織
+    expect(optionValues).not.toContain("org-4"); // 孫組織
   });
 });
