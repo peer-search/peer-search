@@ -22,6 +22,13 @@
       "when": 1763898139945,
       "tag": "0002_late_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764078806621,
+      "tag": "0003_third_eternals",
+      "breakpoints": true
     }
   ]
 }

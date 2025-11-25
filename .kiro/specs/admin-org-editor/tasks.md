@@ -3,7 +3,7 @@
 ## Phase 1: MVP実装（基本CRUD機能）
 
 ### 1. データベースマイグレーション準備
-- [ ] 1.1 (P) organizationsテーブルにupdated_atカラムを追加
+- [x] 1.1 (P) organizationsテーブルにupdated_atカラムを追加
   - マイグレーションファイルを作成し、`updated_at`カラム（TIMESTAMP NOT NULL DEFAULT NOW()）を追加
   - 自動更新トリガー関数（`update_updated_at_column()`）を作成
   - `BEFORE UPDATE` トリガーを設定し、更新時に`updated_at`を自動更新
