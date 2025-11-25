@@ -68,7 +68,7 @@
   - _Requirements: 8.1, 8.4, 8.5, 8.9, 14.1, 14.4_
 
 ### 5. クライアントサイド状態管理（Context API）
-- [ ] 5.1 (P) 選択ノード管理のContext APIを実装
+- [x] 5.1 (P) 選択ノード管理のContext APIを実装
   - `components/organization/organization-context.tsx`を新規作成
   - `OrganizationProvider`コンポーネントで選択ノード状態を管理
   - `useOrganizationSelection()`フックで選択ノードの取得・更新を提供
