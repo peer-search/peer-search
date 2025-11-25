@@ -23,13 +23,13 @@
   - _Requirements: 13.2, 14.3_
 
 ### 3. Service Layer拡張（バリデーション・ヘルパー関数）
-- [ ] 3.1 循環参照検証ロジックを実装
+- [x] 3.1 循環参照検証ロジックを実装
   - `lib/organizations/service.ts`に`validateParentSelection(nodeId, parentId)`関数を追加
   - 親が自分自身でないかチェック
   - 親が子孫ノードでないかチェック（`getDescendantIds()`を利用）
   - _Requirements: 7.3, 9.3_
 
-- [ ] 3.2 子孫ノード取得機能を実装
+- [x] 3.2 子孫ノード取得機能を実装
   - `getDescendantIds(nodeId)`関数を追加し、再帰CTEで子孫ノードIDを取得
   - `getDescendantCount(nodeId)`関数を追加し、子孫ノード数を返す（削除確認用）
   - _Requirements: 8.3, 8.5_
