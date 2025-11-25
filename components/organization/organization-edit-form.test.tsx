@@ -2,10 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { OrganizationFlatNode } from "@/lib/organizations/types";
+import { OrganizationProvider } from "./organization-context";
 import { OrganizationEditForm } from "./organization-edit-form";
 
 // Mock Server Actions
 vi.mock("@/lib/organizations/actions", () => ({
+  createOrganizationAction: vi.fn(),
   updateOrganizationAction: vi.fn(),
   deleteOrganizationAction: vi.fn(),
 }));
@@ -47,10 +49,13 @@ describe("OrganizationEditForm", () => {
 
   it("should display organization name", () => {
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
     expect(screen.getByDisplayValue("テスト組織")).toBeInTheDocument();
   });
@@ -58,10 +63,13 @@ describe("OrganizationEditForm", () => {
   it("should show validation error for empty name", async () => {
     const user = userEvent.setup();
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     const nameInput = screen.getByLabelText("名称");
@@ -77,10 +85,13 @@ describe("OrganizationEditForm", () => {
 
   it("should prevent entering more than 255 characters via maxLength", () => {
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     const nameInput = screen.getByLabelText("名称") as HTMLInputElement;
@@ -100,10 +111,13 @@ describe("OrganizationEditForm", () => {
     vi.mocked(updateOrganizationAction).mockResolvedValue({ success: true });
 
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     const nameInput = screen.getByLabelText("名称");
@@ -133,10 +147,13 @@ describe("OrganizationEditForm", () => {
     });
 
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     const submitButton = screen.getByRole("button", { name: /更新/ });
@@ -160,10 +177,13 @@ describe("OrganizationEditForm", () => {
     );
 
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     const submitButton = screen.getByRole("button", { name: /更新/ });
@@ -176,20 +196,26 @@ describe("OrganizationEditForm", () => {
 
   it("should render parent organization select field", () => {
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
     expect(screen.getByLabelText("親組織")).toBeInTheDocument();
   });
 
   it("should enforce maxLength of 255 characters on name input", () => {
     render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
     const nameInput = screen.getByLabelText("名称") as HTMLInputElement;
     expect(nameInput.maxLength).toBe(255);
@@ -197,10 +223,13 @@ describe("OrganizationEditForm", () => {
 
   it("should update form values when node prop changes", () => {
     const { rerender } = render(
-      <OrganizationEditForm
-        node={mockNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={mockNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     // Initial values
@@ -217,10 +246,13 @@ describe("OrganizationEditForm", () => {
     };
 
     rerender(
-      <OrganizationEditForm
-        node={updatedNode}
-        allOrganizations={mockAllOrganizations}
-      />,
+      <OrganizationProvider allOrganizations={mockAllOrganizations}>
+        <OrganizationEditForm
+          mode="edit"
+          node={updatedNode}
+          allOrganizations={mockAllOrganizations}
+        />
+      </OrganizationProvider>,
     );
 
     // Values should be updated
@@ -274,7 +306,13 @@ describe("OrganizationEditForm", () => {
     const currentNode = allOrgs[1]; // "自分"
 
     const { container } = render(
-      <OrganizationEditForm node={currentNode} allOrganizations={allOrgs} />,
+      <OrganizationProvider allOrganizations={allOrgs}>
+        <OrganizationEditForm
+          mode="edit"
+          node={currentNode}
+          allOrganizations={allOrgs}
+        />
+      </OrganizationProvider>,
     );
 
     // SelectContentのhidden selectを確認（shadcn/uiの内部実装）

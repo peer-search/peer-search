@@ -9,11 +9,15 @@ import type { OrganizationFlatNode } from "@/lib/organizations/types";
  * @property selectedNode - 現在選択されている組織ノード（未選択時はnull）
  * @property setSelectedNode - 組織ノードの選択状態を更新する関数
  * @property allOrganizations - 全組織のリスト
+ * @property isAddMode - 追加モード状態（trueの場合は新規追加フォームを表示）
+ * @property setIsAddMode - 追加モード状態を更新する関数
  */
 interface OrganizationContextValue {
   selectedNode: OrganizationFlatNode | null;
   setSelectedNode: (node: OrganizationFlatNode | null) => void;
   allOrganizations: OrganizationFlatNode[];
+  isAddMode: boolean;
+  setIsAddMode: (isAddMode: boolean) => void;
 }
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(
@@ -51,10 +55,17 @@ export function OrganizationProvider({
   const [selectedNode, setSelectedNode] = useState<OrganizationFlatNode | null>(
     null,
   );
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const value = useMemo(
-    () => ({ selectedNode, setSelectedNode, allOrganizations }),
-    [selectedNode, allOrganizations],
+    () => ({
+      selectedNode,
+      setSelectedNode,
+      allOrganizations,
+      isAddMode,
+      setIsAddMode,
+    }),
+    [selectedNode, allOrganizations, isAddMode],
   );
 
   return (
