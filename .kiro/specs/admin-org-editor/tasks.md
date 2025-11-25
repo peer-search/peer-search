@@ -60,7 +60,7 @@
   - `revalidatePath('/admin/organizations')`実行
   - _Requirements: 7.2, 7.3, 7.4, 7.8, 9.1, 9.2, 9.3, 9.5, 14.1, 14.4_
 
-- [ ] 4.4 組織削除のServer Actionを実装
+- [x] 4.4 組織削除のServer Actionを実装
   - `deleteOrganizationAction(id: string)`を追加
   - ルートノード削除チェック（level === 1の場合エラー）
   - Drizzle ORMで`organizations`テーブルから削除（ON DELETE CASCADEで子孫も連動削除）

@@ -213,9 +213,48 @@ export async function updateOrganizationAction(
   }
 }
 
+/**
+ * 組織削除のServer Action
+ * @param id - 削除する組織のID
+ * @returns ActionResult
+ */
 export async function deleteOrganizationAction(
-  _id: string,
+  id: string,
 ): Promise<ActionResult> {
-  // To be implemented
-  return { success: false, error: "Not implemented" };
+  try {
+    // 権限チェック
+    await checkAdminPermission();
+  } catch (_error) {
+    return {
+      success: false,
+      error: "この操作を実行する権限がありません",
+    };
+  }
+
+  try {
+    // 組織の存在確認
+    const organization = await db.query.organizations.findFirst({
+      where: eq(organizations.id, id),
+    });
+
+    if (!organization) {
+      return { success: false, error: "組織が見つかりません" };
+    }
+
+    // ルートノード削除チェック
+    if (organization.level === 1) {
+      return { success: false, error: "ルート組織は削除できません" };
+    }
+
+    // データベースから削除（ON DELETE CASCADEで子孫も連動削除）
+    await db.delete(organizations).where(eq(organizations.id, id));
+
+    // ページ再検証
+    revalidatePath("/admin/organizations");
+
+    return { success: true };
+  } catch (error) {
+    console.error("deleteOrganizationAction error:", error);
+    return { success: false, error: "削除に失敗しました" };
+  }
 }

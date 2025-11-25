@@ -8,6 +8,7 @@ import * as auth from "@/lib/supabase-auth/auth";
 import {
   checkAdminPermission,
   createOrganizationAction,
+  deleteOrganizationAction,
   updateOrganizationAction,
 } from "./actions";
 import type { CreateOrganizationInput, UpdateOrganizationInput } from "./types";
@@ -548,6 +549,108 @@ describe("updateOrganizationAction", () => {
     // Assert
     expect(result.success).toBe(true);
     expect(mockTransaction).toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/organizations");
+  });
+});
+
+describe("deleteOrganizationAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("管理者権限がない場合はエラーを返す", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "user-456",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "user-456",
+      role: "user",
+    } as Profile);
+
+    // Act
+    const result = await deleteOrganizationAction("org-1");
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it("ルートノード（level=1）の削除は拒否される", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "user-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "user-123",
+      role: "admin",
+    } as Profile);
+
+    vi.mocked(db.query.organizations.findFirst).mockResolvedValue({
+      id: "org-1",
+      name: "会社",
+      level: 1,
+      parentId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Organization);
+
+    // Act
+    const result = await deleteOrganizationAction("org-1");
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("ルート組織は削除できません");
+  });
+
+  it("組織が存在しない場合はエラーを返す", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "user-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "user-123",
+      role: "admin",
+    } as Profile);
+
+    vi.mocked(db.query.organizations.findFirst).mockResolvedValue(undefined);
+
+    // Act
+    const result = await deleteOrganizationAction("org-999");
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("組織が見つかりません");
+  });
+
+  it("正常に組織を削除できる", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "user-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "user-123",
+      role: "admin",
+    } as Profile);
+
+    vi.mocked(db.query.organizations.findFirst).mockResolvedValue({
+      id: "org-1",
+      name: "部署",
+      level: 3,
+      parentId: "parent-1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Organization);
+
+    const mockWhere = vi.fn().mockResolvedValue(undefined);
+    const mockDelete = vi.fn(() => ({ where: mockWhere }));
+    vi.mocked(db.delete).mockReturnValue(mockDelete() as any);
+
+    // Act
+    const result = await deleteOrganizationAction("org-1");
+
+    // Assert
+    expect(result.success).toBe(true);
     expect(revalidatePath).toHaveBeenCalledWith("/admin/organizations");
   });
 });
