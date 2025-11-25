@@ -88,14 +88,14 @@
   - ホバー・フォーカス状態のスタイル適用
   - _Requirements: 4.4, 4.5, 4.6, 5.1, 10.1, 10.2_
 
-- [ ] 6.3 編集パネルコンポーネントを実装
+- [x] 6.3 編集パネルコンポーネントを実装
   - `components/organization/organization-edit-panel.tsx`を新規作成
   - `useOrganizationSelection()`で選択ノード取得
   - 未選択時は「組織を選択してください」メッセージを表示
   - 選択時は`OrganizationEditForm`を表示
   - _Requirements: 5.2, 5.4_
 
-- [ ] 6.4 編集フォームコンポーネントを実装
+- [x] 6.4 編集フォームコンポーネントを実装
   - `components/organization/organization-edit-form.tsx`を新規作成（Client Component）
   - 名称入力フィールド（`maxLength={255}`）
   - 親組織選択フィールド（循環参照を除外したリスト表示）
@@ -104,7 +104,7 @@
   - エラーメッセージ表示（フォーム下部）
   - _Requirements: 7.1, 7.2, 7.3, 9.1, 9.2, 9.6, 10.5, 11.3_
 
-- [ ] 6.5 削除確認ダイアログコンポーネントを実装
+- [x] 6.5 削除確認ダイアログコンポーネントを実装
   - `components/organization/delete-organization-dialog.tsx`を新規作成
   - shadcn/uiの`AlertDialog`を使用
   - 子ノード存在時の警告メッセージ表示（`getDescendantCount()`利用）
