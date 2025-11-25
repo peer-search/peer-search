@@ -43,6 +43,9 @@ export const organizations = pgTable(
 
 export type Organization = typeof organizations.$inferSelect;
 export type NewOrganization = typeof organizations.$inferInsert;
+export type UpdateOrganization = Partial<
+  Omit<NewOrganization, "id" | "createdAt">
+>;
 
 /**
  * Employees table - 社員情報

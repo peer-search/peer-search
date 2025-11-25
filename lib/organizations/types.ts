@@ -32,6 +32,35 @@ export type Result<T, E> =
 export type OrganizationFlatNode = {
   id: string;
   name: string;
-  parent_id: string | null;
+  parentId: string | null;
   level: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+/**
+ * 組織追加のServer Action入力型
+ */
+export type CreateOrganizationInput = {
+  name: string;
+  parentId: string | null;
+};
+
+/**
+ * 組織更新のServer Action入力型
+ */
+export type UpdateOrganizationInput = {
+  id: string;
+  name: string;
+  parentId: string | null;
+};
+
+/**
+ * Server Actionの戻り値型
+ * @template T データの型（省略時はvoid）
+ */
+export type ActionResult<T = void> = {
+  success: boolean;
+  data?: T;
+  error?: string;
 };

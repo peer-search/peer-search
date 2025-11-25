@@ -11,14 +11,14 @@
   - _Requirements: 13.2_
 
 ### 2. 型定義とスキーマ拡張
-- [ ] 2.1 (P) Drizzleスキーマに`updated_at`カラムを追加
+- [x] 2.1 (P) Drizzleスキーマに`updated_at`カラムを追加
   - `db/schema.ts`の`organizations`テーブル定義に`updatedAt: timestamp("updated_at").defaultNow().notNull()`を追加
   - `Organization`, `NewOrganization`, `UpdateOrganization`型を更新
   - _Requirements: 13.2_
 
-- [ ] 2.2 (P) 組織管理用の型定義を拡張
+- [x] 2.2 (P) 組織管理用の型定義を拡張
   - `lib/organizations/types.ts`に`CreateOrganizationInput`, `UpdateOrganizationInput`型を追加
-  - `OrganizationFlatNode`に`updatedAt: Date`フィールドを追加
+  - `OrganizationFlatNode`に`updatedAt: Date`フィールドを追加（`parent_id` → `parentId`にリネーム）
   - Server Action戻り値用の`ActionResult<T>`型を定義
   - _Requirements: 13.2, 14.3_
 

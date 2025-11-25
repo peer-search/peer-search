@@ -11,9 +11,9 @@ import type {
  *
  * @example
  * const flatData = [
- *   { id: '1', name: '会社A', parent_id: null, level: 1 },
- *   { id: '2', name: '本部B', parent_id: '1', level: 2 },
- *   { id: '3', name: '部署C', parent_id: '2', level: 3 },
+ *   { id: '1', name: '会社A', parentId: null, level: 1, createdAt: new Date(), updatedAt: new Date() },
+ *   { id: '2', name: '本部B', parentId: '1', level: 2, createdAt: new Date(), updatedAt: new Date() },
+ *   { id: '3', name: '部署C', parentId: '2', level: 3, createdAt: new Date(), updatedAt: new Date() },
  * ];
  * const tree = buildTree(flatData);
  * // => [{ id: '1', name: '会社A', level: 1, children: [...] }]
@@ -34,7 +34,7 @@ export function buildTree(
     });
   }
 
-  // ルートノード（parent_id が null）を格納する配列
+  // ルートノード（parentId が null）を格納する配列
   const rootNodes: OrganizationTree[] = [];
 
   // 親子関係を構築
@@ -45,19 +45,19 @@ export function buildTree(
       continue;
     }
 
-    if (node.parent_id === null) {
-      // ルートノード（parent_id が null）の場合
+    if (node.parentId === null) {
+      // ルートノード（parentId が null）の場合
       rootNodes.push(treeNode);
     } else {
       // 子ノードの場合、親ノードのchildrenに追加
-      const parentNode = nodeMap.get(node.parent_id);
+      const parentNode = nodeMap.get(node.parentId);
       if (parentNode) {
         parentNode.children.push(treeNode);
       } else {
         // 親ノードが見つからない場合（データ不整合）
         // 警告ログを出力し、ルートノードとして扱う
         console.warn(
-          `Parent node not found for node ${node.id} (parent_id: ${node.parent_id})`,
+          `Parent node not found for node ${node.id} (parentId: ${node.parentId})`,
         );
         rootNodes.push(treeNode);
       }
