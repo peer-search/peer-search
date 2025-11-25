@@ -71,3 +71,50 @@ export function buildTree(
 
   return rootNodes;
 }
+
+/**
+ * ツリー構造の組織階層データをフラット配列に変換する（深さ優先順序）
+ *
+ * @param tree - ツリー構造の組織階層データ
+ * @returns フラット配列の組織階層データ（階層情報のみ、parentIdなどは含まない）
+ *
+ * @example
+ * const tree = [
+ *   {
+ *     id: '1', name: '会社A', level: 1,
+ *     children: [
+ *       { id: '2', name: '本部B', level: 2, children: [] }
+ *     ]
+ *   }
+ * ];
+ * const flat = flattenTree(tree);
+ * // => [
+ * //   { id: '1', name: '会社A', level: 1 },
+ * //   { id: '2', name: '本部B', level: 2 }
+ * // ]
+ */
+export function flattenTree(
+  tree: OrganizationTree[],
+): Array<{ id: string; name: string; level: number }> {
+  const result: Array<{ id: string; name: string; level: number }> = [];
+
+  // 深さ優先探索で再帰的にツリーをフラット化
+  function traverse(nodes: OrganizationTree[]) {
+    for (const node of nodes) {
+      // 現在のノードを結果配列に追加
+      result.push({
+        id: node.id,
+        name: node.name,
+        level: node.level,
+      });
+
+      // 子ノードがある場合、再帰的に処理
+      if (node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(tree);
+  return result;
+}

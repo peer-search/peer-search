@@ -75,13 +75,13 @@
   - _Requirements: 5.1, 5.3_
 
 ### 6. UIコンポーネント実装（Phase 1: リスト表示）
-- [ ] 6.1 組織リストビューコンポーネントを実装
+- [x] 6.1 組織リストビューコンポーネントを実装
   - `components/organization/organization-list-view.tsx`を新規作成（Client Component）
   - `organizations`プロップからフラット配列に変換（`flattenTree()`ヘルパー使用）
   - 選択ノード状態を管理し、各ノードに`onSelect`コールバックを渡す
   - _Requirements: 4.1, 4.4, 5.1_
 
-- [ ] 6.2 個別組織リストアイテムを実装
+- [x] 6.2 個別組織リストアイテムを実装
   - `components/organization/organization-list-item.tsx`を新規作成
   - 階層レベルに応じたインデント表示（`level * 20px`）
   - 選択状態のハイライト表示（背景色・枠線）
