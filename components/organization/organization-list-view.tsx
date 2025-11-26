@@ -23,7 +23,7 @@ export function OrganizationListView({
   const flatNodes = flattenTree(organizations);
 
   return (
-    <div className="w-full md:w-1/3 border-r overflow-auto">
+    <div className="h-full">
       {flatNodes.map((node) => {
         // allOrganizationsから完全なノード情報を取得
         const fullNode = allOrganizations.find((org) => org.id === node.id);

@@ -68,17 +68,26 @@ export default async function AdminOrganizationsPage() {
 
   // 5. レイアウトレンダリング
   return (
-    <div className="flex flex-col md:flex-row h-screen">
-      <OrganizationProvider allOrganizations={allOrganizations}>
-        <div className="flex flex-col md:flex-row flex-1">
-          <div className="w-full md:w-1/3 border-r overflow-auto">
-            <OrganizationListView organizations={organizations} />
-          </div>
-          <div className="flex-1 p-6">
-            <OrganizationEditPanel />
-          </div>
+    <OrganizationProvider allOrganizations={allOrganizations}>
+      <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+        {/* 左側: 組織リストビュー
+            - モバイル (<768px): 画面全体に表示（縦方向）
+            - タブレット (768px-1024px): 40%幅
+            - デスクトップ (>=1024px): 30%幅
+        */}
+        <div className="w-full md:w-2/5 lg:w-[30%] md:border-r overflow-auto">
+          <OrganizationListView organizations={organizations} />
         </div>
-      </OrganizationProvider>
-    </div>
+
+        {/* 右側: 編集パネル
+            - モバイル (<768px): Sheetで表示（OrganizationEditPanelで制御）
+            - タブレット (768px-1024px): 60%幅
+            - デスクトップ (>=1024px): 70%幅
+        */}
+        <div className="w-full md:flex-1 p-6 overflow-auto">
+          <OrganizationEditPanel />
+        </div>
+      </div>
+    </OrganizationProvider>
   );
 }
