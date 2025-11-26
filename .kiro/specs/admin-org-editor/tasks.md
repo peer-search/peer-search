@@ -144,7 +144,7 @@
   - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
 ### 9. ユニットテスト実装
-- [ ] 9.1* バリデーションロジックのユニットテストを作成
+- [x] 9.1* バリデーションロジックのユニットテストを作成
   - `lib/organizations/service.test.ts`を新規作成
   - `validateParentSelection()`のテスト（自分自身、子孫ノード、有効な親のケース）
   - `getDescendantIds()`のテスト（再帰CTEの動作確認）
