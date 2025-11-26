@@ -116,9 +116,8 @@ export async function getDescendantIds(nodeId: string): Promise<string[]> {
     SELECT id FROM descendants
   `);
 
-  // Drizzle's execute returns { rows: [...] } structure
-  const rows = (result as unknown as { rows: Array<{ id: string }> }).rows;
-  return rows.map((row) => row.id);
+  // Drizzle's execute returns an array of rows directly
+  return result.map((row) => row.id);
 }
 
 /**
