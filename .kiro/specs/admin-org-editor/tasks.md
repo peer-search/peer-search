@@ -151,14 +151,14 @@
   - _Requirements: 7.3, 9.3_
 
 ### 10. コンポーネントテスト実装
-- [ ] 10.1* 編集フォームコンポーネントのテストを作成
+- [x] 10.1* 編集フォームコンポーネントのテストを作成
   - `components/organization/organization-edit-form.test.tsx`を新規作成
   - 初期表示テスト（組織名表示確認）
   - バリデーションエラー表示テスト（空文字列入力時）
   - Server Action呼び出しテスト（モック使用）
   - _Requirements: 7.1, 7.2, 9.1, 9.2_
 
-- [ ] 10.2* リストアイテムコンポーネントのテストを作成
+- [x] 10.2* リストアイテムコンポーネントのテストを作成
   - `components/organization/organization-list-item.test.tsx`を新規作成
   - 階層インデント表示テスト（`level * 20px`）
   - 選択状態ハイライトテスト

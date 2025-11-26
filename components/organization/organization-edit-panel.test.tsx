@@ -38,7 +38,10 @@ describe("OrganizationEditPanel", () => {
       </OrganizationProvider>,
     );
 
-    expect(screen.getByText("組織を選択してください")).toBeInTheDocument();
+    // Text appears multiple times due to responsive design (desktop + mobile)
+    const placeholderElements = screen.getAllByText("組織を選択してください");
+    expect(placeholderElements.length).toBeGreaterThan(0);
+    expect(placeholderElements[0]).toBeInTheDocument();
   });
 
   it("should render edit form when a node is selected", () => {
@@ -51,6 +54,9 @@ describe("OrganizationEditPanel", () => {
     );
 
     // When no selection, should show placeholder
-    expect(screen.getByText("組織を選択してください")).toBeInTheDocument();
+    // Text appears multiple times due to responsive design (desktop + mobile)
+    const placeholderElements = screen.getAllByText("組織を選択してください");
+    expect(placeholderElements.length).toBeGreaterThan(0);
+    expect(placeholderElements[0]).toBeInTheDocument();
   });
 });
