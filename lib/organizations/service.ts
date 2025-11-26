@@ -1,3 +1,5 @@
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
 import { buildTree } from "@/lib/organizations/tree";
 import type {
   OrganizationError,
@@ -52,7 +54,15 @@ export async function getOrganizationHierarchy(): Promise<
 
     // フラット配列をツリー構造に変換
     try {
-      const flatNodes = data as OrganizationFlatNode[];
+      // Supabaseから返されるデータはsnake_caseなのでcamelCaseに変換
+      const flatNodes: OrganizationFlatNode[] = data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        parentId: row.parent_id,
+        level: row.level,
+        createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+        updatedAt: row.updated_at ? new Date(row.updated_at) : new Date(),
+      }));
       const tree = buildTree(flatNodes);
 
       return {
@@ -87,4 +97,88 @@ export async function getOrganizationHierarchy(): Promise<
       },
     };
   }
+}
+
+/**
+ * 子孫ノードのIDを取得する
+ *
+ * 再帰CTEを使用して、指定されたノードの全子孫ノードIDを取得します。
+ *
+ * @param nodeId - 対象ノードのID
+ * @returns 子孫ノードのID配列
+ *
+ * @example
+ * const descendantIds = await getDescendantIds('node-1');
+ * // ['node-2', 'node-3', 'node-4']
+ */
+export async function getDescendantIds(nodeId: string): Promise<string[]> {
+  // 再帰CTEで子孫ノードを取得
+  const result = await db.execute<{ id: string }>(sql`
+    WITH RECURSIVE descendants AS (
+      SELECT id, parent_id FROM organizations WHERE parent_id = ${nodeId}
+      UNION ALL
+      SELECT o.id, o.parent_id
+      FROM organizations o
+      INNER JOIN descendants d ON o.parent_id = d.id
+    )
+    SELECT id FROM descendants
+  `);
+
+  // Drizzle's execute returns an array of rows directly
+  return result.map((row) => row.id);
+}
+
+/**
+ * 子孫ノード数を取得する
+ *
+ * @param nodeId - 対象ノードのID
+ * @returns 子孫ノード数
+ *
+ * @example
+ * const count = await getDescendantCount('node-1');
+ * console.log(`${count}個の子部署があります`);
+ */
+export async function getDescendantCount(nodeId: string): Promise<number> {
+  const ids = await getDescendantIds(nodeId);
+  return ids.length;
+}
+
+/**
+ * 親組織の選択が有効かどうかを検証する
+ *
+ * 循環参照を防ぐため、以下の条件をチェックします：
+ * - 親が自分自身でないこと
+ * - 親が自分の子孫ノードでないこと
+ *
+ * @param nodeId - 対象ノードのID
+ * @param parentId - 選択された親ノードのID（nullの場合はルートノード化）
+ * @returns 有効な場合はtrue、無効な場合はfalse
+ *
+ * @example
+ * const isValid = await validateParentSelection('node-1', 'node-2');
+ * if (!isValid) {
+ *   console.error('循環参照が発生します');
+ * }
+ */
+export async function validateParentSelection(
+  nodeId: string,
+  parentId: string | null,
+): Promise<boolean> {
+  // nullの場合はルートノード化なのでOK
+  if (parentId === null) {
+    return true;
+  }
+
+  // 親が自分自身ではないか
+  if (nodeId === parentId) {
+    return false;
+  }
+
+  // 親が子孫ノードではないか
+  const descendantIds = await getDescendantIds(nodeId);
+  if (descendantIds.includes(parentId)) {
+    return false;
+  }
+
+  return true;
 }

@@ -28,6 +28,10 @@ export const organizations = pgTable(
     parentId: uuid("parent_id"),
     level: integer("level").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     // インデックス: parent_idによる階層検索を高速化
@@ -39,6 +43,9 @@ export const organizations = pgTable(
 
 export type Organization = typeof organizations.$inferSelect;
 export type NewOrganization = typeof organizations.$inferInsert;
+export type UpdateOrganization = Partial<
+  Omit<NewOrganization, "id" | "createdAt">
+>;
 
 /**
  * Employees table - 社員情報

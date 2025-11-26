@@ -50,9 +50,10 @@ pnpm test:coverage     # Coverage report
 ```
 
 **Test Strategy**:
-- **Unit Tests**: ビジネスロジック・ユーティリティ関数（例: ツリー構造変換）
-- **Component Tests**: React Componentsの描画・インタラクション（例: OrganizationCard）
-- **Integration Tests**: 将来的にE2Eフレームワーク（Playwright等）の導入を検討
+- **Unit Tests**: ビジネスロジック・ユーティリティ関数（例: ツリー構造変換、バリデーション）
+- **Component Tests**: React Componentsの描画・インタラクション（例: OrganizationCard、EmployeeForm）
+- **Integration Tests**: Server Actionsとデータベース連携のエンドツーエンドテスト（例: 社員CRUD操作）
+- **Performance & SEO Tests**: パフォーマンス、アクセシビリティ、SEO検証
 
 ## Development Environment
 
@@ -94,6 +95,24 @@ PostgreSQLとの連携にDrizzle ORMを採用。TypeScript-firstなAPIと、マ�
 
 ### Biome over ESLint/Prettier
 高速性とオールインワン設計を評価し、Biomeを採用。ESLintとPrettierの2ツール体制から移行。
+
+### Context API for Feature State
+組織管理など、複数コンポーネント間で共有する状態はReact Context APIで管理。機能ごとに専用のProviderとカスタムフックを作成。
+
+```typescript
+// Pattern: Feature-scoped Context
+export function {Feature}Provider({ children, ...data }) {
+  const [state, setState] = useState(initialState);
+  const value = useMemo(() => ({ state, setState, ...data }), [state, data]);
+  return <{Feature}Context.Provider value={value}>{children}</{Feature}Context.Provider>;
+}
+
+export function use{Feature}Selection() {
+  const context = useContext({Feature}Context);
+  if (!context) throw new Error("Must be used within {Feature}Provider");
+  return context;
+}
+```
 
 ---
 _Document standards and patterns, not every dependency_
