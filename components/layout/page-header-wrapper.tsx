@@ -10,7 +10,13 @@ export async function PageHeaderWrapper() {
   }
 
   // Get user profile to check admin status
-  const profile = await getProfileByUserId(user.id);
+  // Handle missing profiles gracefully (profile may not exist yet)
+  let profile = null;
+  try {
+    profile = await getProfileByUserId(user.id);
+  } catch (error) {
+    console.error("Failed to fetch profile:", error);
+  }
   const isAdmin = profile?.role === "admin";
 
   return <PageHeader user={user} isAdmin={isAdmin} />;

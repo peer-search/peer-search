@@ -54,7 +54,15 @@ export async function getOrganizationHierarchy(): Promise<
 
     // フラット配列をツリー構造に変換
     try {
-      const flatNodes = data as OrganizationFlatNode[];
+      // Supabaseから返されるデータはsnake_caseなのでcamelCaseに変換
+      const flatNodes: OrganizationFlatNode[] = data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        parentId: row.parent_id,
+        level: row.level,
+        createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+        updatedAt: row.updated_at ? new Date(row.updated_at) : new Date(),
+      }));
       const tree = buildTree(flatNodes);
 
       return {

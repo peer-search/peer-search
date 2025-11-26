@@ -13,8 +13,8 @@ export const dynamic = "force-dynamic";
  * - 9.4: Next.js metadata APIを使用
  */
 export const metadata: Metadata = {
-  title: "組織階層",
-  description: "会社・本部・部署・課／チームの組織階層を表示します",
+  title: "部署一覧",
+  description: "会社・本部・部署・課／チームの一覧を表示します",
 };
 
 /**
@@ -44,11 +44,8 @@ export default async function Home() {
     <main className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
       <div className="mb-10 space-y-3">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          組織階層
+          部署一覧
         </h1>
-        <p className="text-base text-muted-foreground md:text-lg">
-          会社・本部・部署・課／チームの組織階層を表示します
-        </p>
       </div>
       <OrganizationCardList organizations={result.data} />
     </main>
