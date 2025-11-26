@@ -304,7 +304,9 @@ describe("flattenTree", () => {
 
     const result = flattenTree(tree);
 
-    expect(result).toEqual([{ id: "1", name: "会社A", level: 1 }]);
+    expect(result).toEqual([
+      { id: "1", name: "会社A", level: 1, parentId: null },
+    ]);
   });
 
   it("親子関係（2階層）を深さ優先順序でフラット配列に変換する", () => {
@@ -320,8 +322,8 @@ describe("flattenTree", () => {
     const result = flattenTree(tree);
 
     expect(result).toEqual([
-      { id: "1", name: "会社A", level: 1 },
-      { id: "2", name: "本部B", level: 2 },
+      { id: "1", name: "会社A", level: 1, parentId: null },
+      { id: "2", name: "本部B", level: 2, parentId: "1" },
     ]);
   });
 
@@ -352,10 +354,10 @@ describe("flattenTree", () => {
     const result = flattenTree(tree);
 
     expect(result).toEqual([
-      { id: "1", name: "会社A", level: 1 },
-      { id: "2", name: "本部B", level: 2 },
-      { id: "3", name: "部署C", level: 3 },
-      { id: "4", name: "課D", level: 4 },
+      { id: "1", name: "会社A", level: 1, parentId: null },
+      { id: "2", name: "本部B", level: 2, parentId: "1" },
+      { id: "3", name: "部署C", level: 3, parentId: "2" },
+      { id: "4", name: "課D", level: 4, parentId: "3" },
     ]);
   });
 
@@ -383,11 +385,11 @@ describe("flattenTree", () => {
     const result = flattenTree(tree);
 
     expect(result).toEqual([
-      { id: "1", name: "会社A", level: 1 },
-      { id: "2", name: "本部B", level: 2 },
-      { id: "4", name: "部署D", level: 3 },
-      { id: "5", name: "部署E", level: 3 },
-      { id: "3", name: "本部C", level: 2 },
+      { id: "1", name: "会社A", level: 1, parentId: null },
+      { id: "2", name: "本部B", level: 2, parentId: "1" },
+      { id: "4", name: "部署D", level: 3, parentId: "2" },
+      { id: "5", name: "部署E", level: 3, parentId: "2" },
+      { id: "3", name: "本部C", level: 2, parentId: "1" },
     ]);
   });
 
@@ -400,8 +402,8 @@ describe("flattenTree", () => {
     const result = flattenTree(tree);
 
     expect(result).toEqual([
-      { id: "1", name: "会社A", level: 1 },
-      { id: "2", name: "会社B", level: 1 },
+      { id: "1", name: "会社A", level: 1, parentId: null },
+      { id: "2", name: "会社B", level: 1, parentId: null },
     ]);
   });
 

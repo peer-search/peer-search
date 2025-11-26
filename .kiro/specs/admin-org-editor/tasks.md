@@ -166,12 +166,13 @@
   - _Requirements: 4.4, 4.5, 10.1, 10.2_
 
 ### 11. 統合テスト実装
-- [ ] 11.1* Server Actionsの統合テストを作成
+- [x] 11.1* Server Actionsの統合テストを作成
   - `lib/organizations/actions.integration.test.ts`を新規作成
   - 組織追加テスト（データベース検証含む）
   - 組織編集テスト（階層レベル再計算確認）
   - 組織削除テスト（ON DELETE CASCADE確認）
   - テストデータのセットアップ・クリーンアップ
+  - 環境変数チェックとテストスキップ機能の実装
   - _Requirements: 6.3, 6.4, 7.4, 7.5, 8.4, 8.6, 14.1, 14.4_
 
 ### 12. Phase 1 動作確認・統合
