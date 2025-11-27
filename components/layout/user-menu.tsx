@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase-auth/client";
+import { signOut } from "@/lib/supabase-auth/authGoogle";
 
 interface UserMenuProps {
   user: User;
@@ -27,18 +27,9 @@ export function UserMenu({ user, isAdmin }: UserMenuProps) {
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("ログアウトエラー:", error);
-        return;
-      }
-
-      router.push("/login");
+      await signOut();
     } catch (error) {
       console.error("ログアウトエラー:", error);
-    } finally {
       setIsLoading(false);
     }
   };
