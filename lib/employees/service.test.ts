@@ -12,6 +12,7 @@ import {
   createEmployee,
   deleteEmployee,
   getEmployeeById,
+  searchEmployees,
   updateEmployee,
 } from "./service";
 import type { CreateEmployeeInput } from "./types";
@@ -704,6 +705,311 @@ describe("deleteEmployee", () => {
     // Assert: CASCADE DELETEはDB側の設定で自動実行される
     // employee_organizationsテーブルのレコードも自動削除されることを期待
     expect(mockDelete.where).toHaveBeenCalled();
+  });
+});
+
+describe("searchEmployees", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("社員一覧取得時にbuildOrganizationPathsBatchが呼び出される", async () => {
+    // Setup mock data: 2 employees with 2 organizations each
+    const mockRows = [
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: "090-1234-5678",
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "開発部",
+        position: "課長",
+      },
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: "090-1234-5678",
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org2",
+        organizationName: "営業部",
+        position: null,
+      },
+      {
+        id: "emp2",
+        employeeNumber: "E002",
+        nameKanji: "佐藤花子",
+        nameKana: "さとうはなこ",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "sato@example.com",
+        hireDate: "2021-01-01",
+        organizationId: "org1",
+        organizationName: "開発部",
+        position: "主任",
+      },
+    ];
+
+    // Mock db.select chain - create a proper thenable mock
+    const thenableMock = Object.assign(Promise.resolve(mockRows), {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      $dynamic: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+    });
+
+    vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+    // Mock db.execute for buildOrganizationPathsBatch
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部 開発部",
+      },
+      {
+        organization_id: "org2",
+        path: "ABC株式会社 営業本部 営業部",
+      },
+    ]);
+
+    // Act
+    const result = await searchEmployees({ name: "山田" });
+
+    // Assert
+    expect(result).toHaveLength(2);
+    expect(result[0].organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部",
+    );
+    expect(result[0].organizations[1].organizationPath).toBe(
+      "ABC株式会社 営業本部 営業部",
+    );
+    expect(result[1].organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部",
+    );
+  });
+
+  it("組織がない社員の場合、buildOrganizationPathsBatchが呼び出されない", async () => {
+    // Setup mock data: employee with no organization
+    const mockRows = [
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: null,
+        organizationName: null,
+        position: null,
+      },
+    ];
+
+    // Mock db.select chain - create a proper thenable mock
+    const thenableMock = Object.assign(Promise.resolve(mockRows), {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      $dynamic: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+    });
+
+    vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+    // Mock db.execute should return empty for empty input
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([]);
+
+    // Act
+    const result = await searchEmployees();
+
+    // Assert
+    expect(result).toHaveLength(1);
+    expect(result[0].organizations).toHaveLength(0);
+  });
+
+  it("重複する組織IDが正しく排除される", async () => {
+    // Setup mock data: 2 employees belonging to same organization
+    const mockRows = [
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "開発部",
+        position: "課長",
+      },
+      {
+        id: "emp2",
+        employeeNumber: "E002",
+        nameKanji: "佐藤花子",
+        nameKana: "さとうはなこ",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "sato@example.com",
+        hireDate: "2021-01-01",
+        organizationId: "org1", // Same organization as emp1
+        organizationName: "開発部",
+        position: "主任",
+      },
+    ];
+
+    // Mock db.select chain - create a proper thenable mock
+    const thenableMock = Object.assign(Promise.resolve(mockRows), {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      $dynamic: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+    });
+
+    vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+    // Mock db.execute - should be called only once for org1
+    const mockExecute = vi.fn().mockResolvedValue([
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部 開発部",
+      },
+    ]);
+    vi.mocked(db.execute).mockImplementation(mockExecute as never);
+
+    // Act
+    const result = await searchEmployees();
+
+    // Assert
+    expect(result).toHaveLength(2);
+    // Verify buildOrganizationPathsBatch was called only once despite 2 employees
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+    // Verify both employees have the same organization path
+    expect(result[0].organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部",
+    );
+    expect(result[1].organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部",
+    );
+  });
+
+  it("組織階層パスが既存のbuildOrganizationPath()と同じ形式で設定される", async () => {
+    const mockRows = [
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "第一課",
+        position: "課長",
+      },
+    ];
+
+    // Mock db.select chain - create a proper thenable mock
+    const thenableMock = Object.assign(Promise.resolve(mockRows), {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      $dynamic: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+    });
+
+    vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+    // Mock db.execute - return 4-level hierarchy path with half-width spaces
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部 開発部 第一課",
+      },
+    ]);
+
+    // Act
+    const result = await searchEmployees();
+
+    // Assert
+    expect(result).toHaveLength(1);
+    expect(result[0].organizations).toHaveLength(1);
+    // Verify path is set correctly with half-width spaces
+    expect(result[0].organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部 第一課",
+    );
+    // Verify it contains half-width space (not full-width)
+    expect(result[0].organizations[0].organizationPath).toContain(" ");
+    expect(result[0].organizations[0].organizationPath).not.toContain("　");
+  });
+
+  it("存在しない組織IDの場合、空文字列が設定される", async () => {
+    const mockRows = [
+      {
+        id: "emp1",
+        employeeNumber: "E001",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "nonexistent-org",
+        organizationName: "存在しない部署",
+        position: null,
+      },
+    ];
+
+    // Mock db.select chain - create a proper thenable mock
+    const thenableMock = Object.assign(Promise.resolve(mockRows), {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      $dynamic: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+    });
+
+    vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+    // Mock db.execute - return empty result (organization not found)
+    // buildOrganizationPathsBatch will set empty string for missing org
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([]);
+
+    // Act
+    const result = await searchEmployees();
+
+    // Assert
+    expect(result).toHaveLength(1);
+    expect(result[0].organizations).toHaveLength(1);
+    // Verify empty string is set for non-existent organization
+    expect(result[0].organizations[0].organizationPath).toBe("");
   });
 });
 

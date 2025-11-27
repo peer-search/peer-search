@@ -39,7 +39,7 @@
 ### Phase 2: 社員一覧の最適化
 
 - [ ] 2. 社員一覧取得の最適化
-- [ ] 2.1 `searchEmployees` 関数の最適化
+- [x] 2.1 `searchEmployees` 関数の最適化
   - `lib/employees/service.ts:258-264` の組織階層パス個別生成ループを削除
   - すべての社員の所属組織IDを収集（`Set<string>` で重複排除）
   - `buildOrganizationPathsBatch(Array.from(orgIdsSet))` を呼び出し、階層パスMapを取得
@@ -48,7 +48,7 @@
   - 既存のパフォーマンス計測（203-217行）を維持
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 7.2, 7.4_
 
-- [ ] 2.2* (P) 既存テストの更新と検証
+- [x] 2.2* (P) 既存テストの更新と検証
   - 既存の `searchEmployees()` のテストケースがすべてパスすることを確認
   - `buildOrganizationPathsBatch()` が適切に呼び出されることをモックで検証
   - 組織階層パスが正しく設定されることを検証するテストケースを追加

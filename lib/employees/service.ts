@@ -343,11 +343,24 @@ export async function searchEmployees(
     }
   }
 
-  // 各社員の所属組織の階層パスを生成
+  // 各社員の所属組織の階層パスを一括生成（N+1クエリ問題の解決）
   const employeesList = Array.from(employeeMap.values());
+
+  // すべての社員の所属組織IDを収集（重複排除）
+  const orgIdsSet = new Set<string>();
   for (const employee of employeesList) {
     for (const org of employee.organizations) {
-      org.organizationPath = await buildOrganizationPath(org.organizationId);
+      orgIdsSet.add(org.organizationId);
+    }
+  }
+
+  // 組織階層パスを一括取得
+  const orgPathsMap = await buildOrganizationPathsBatch(Array.from(orgIdsSet));
+
+  // 各社員の所属組織に階層パスを設定
+  for (const employee of employeesList) {
+    for (const org of employee.organizations) {
+      org.organizationPath = orgPathsMap.get(org.organizationId) || "";
     }
   }
 
