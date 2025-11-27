@@ -441,9 +441,12 @@ export async function getEmployeeById(
     }
   }
 
-  // 各所属組織の階層パスを生成
+  // 各所属組織の階層パスを一括生成（N+1クエリ問題の解決）
+  const orgPathsMap = await buildOrganizationPathsBatch(Array.from(orgIds));
+
+  // 各所属組織に階層パスを設定
   for (const org of employee.organizations) {
-    org.organizationPath = await buildOrganizationPath(org.organizationId);
+    org.organizationPath = orgPathsMap.get(org.organizationId) || "";
   }
 
   return employee;

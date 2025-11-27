@@ -62,8 +62,8 @@
 
 ### Phase 3: 社員詳細の最適化
 
-- [ ] 3. 社員詳細取得の最適化
-- [ ] 3.1 `getEmployeeById` 関数の最適化
+- [x] 3. 社員詳細取得の最適化
+- [x] 3.1 `getEmployeeById` 関数の最適化
   - `lib/employees/service.ts:343-346` の組織階層パス個別生成ループを削除
   - 社員の所属組織IDを収集（`employee.organizations.map(o => o.organizationId)`）
   - `buildOrganizationPathsBatch(orgIds)` を呼び出し、階層パスMapを取得
@@ -72,7 +72,7 @@
   - 既存のnullチェック（306-308行）を維持
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 7.2, 7.4_
 
-- [ ] 3.2* (P) 既存テストの更新と検証
+- [x] 3.2* (P) 既存テストの更新と検証
   - 既存の `getEmployeeById()` のテストケースがすべてパスすることを確認
   - `buildOrganizationPathsBatch()` が適切に呼び出されることをモックで検証
   - 組織階層パスが正しく設定されることを検証するテストケースを追加

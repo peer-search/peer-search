@@ -150,28 +150,21 @@ describe("getEmployeeById", () => {
       },
     ];
 
-    // Mock db.execute for WITH RECURSIVE queries (buildOrganizationPath)
+    // Mock db.execute for buildOrganizationPathsBatch
     (
-      vi.mocked(db.execute).mockImplementation as unknown as (
-        impl: (_query: unknown) => Promise<unknown>,
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
       ) => void
-    )(async (_query: unknown) => {
-      const queryString = String(_query);
-      if (queryString.includes("org1")) {
-        return [
-          { name: "ABC株式会社", level: 1 },
-          { name: "技術本部", level: 2 },
-        ];
-      }
-      if (queryString.includes("org2")) {
-        return [
-          { name: "ABC株式会社", level: 1 },
-          { name: "技術本部", level: 2 },
-          { name: "開発部", level: 3 },
-        ];
-      }
-      return [];
-    });
+    )([
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部",
+      },
+      {
+        organization_id: "org2",
+        path: "ABC株式会社 技術本部 開発部",
+      },
+    ]);
 
     // Mock db.select chain
     const mockSelect = {
@@ -239,16 +232,16 @@ describe("getEmployeeById", () => {
       },
     ];
 
-    // Mock buildOrganizationPath to return full path
+    // Mock buildOrganizationPathsBatch to return full path
     (
       vi.mocked(db.execute).mockResolvedValue as unknown as (
         value: unknown,
       ) => void
     )([
-      { name: "ABC株式会社", level: 1 },
-      { name: "技術本部", level: 2 },
-      { name: "開発部", level: 3 },
-      { name: "第一課", level: 4 },
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部 開発部 第一課",
+      },
     ]);
 
     const mockSelect = {
@@ -301,6 +294,143 @@ describe("getEmployeeById", () => {
     // Assertions
     expect(employee).toBeTruthy();
     expect(employee?.organizations).toHaveLength(0);
+  });
+
+  it("buildOrganizationPathsBatchを使用して階層パスを一括取得する（N+1解消）", async () => {
+    const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+    const mockRows = [
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org1",
+        organizationName: "開発部",
+        position: "課長",
+      },
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org2",
+        organizationName: "営業部",
+        position: null,
+      },
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "org3",
+        organizationName: "管理部",
+        position: "主任",
+      },
+    ];
+
+    // Mock db.select chain
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(mockRows),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
+
+    // Mock db.execute for buildOrganizationPathsBatch (1回のみ呼び出される)
+    const mockExecute = vi.fn().mockResolvedValue([
+      {
+        organization_id: "org1",
+        path: "ABC株式会社 技術本部 開発部",
+      },
+      {
+        organization_id: "org2",
+        path: "ABC株式会社 営業本部 営業部",
+      },
+      {
+        organization_id: "org3",
+        path: "ABC株式会社 管理本部 管理部",
+      },
+    ]);
+
+    vi.mocked(db.execute).mockImplementation(mockExecute as never);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertions
+    expect(employee).toBeTruthy();
+    expect(employee?.organizations).toHaveLength(3);
+
+    // buildOrganizationPathsBatchが1回のみ呼び出される（N+1問題が解消されている）
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+
+    // 各組織の階層パスが正しく設定されている
+    expect(employee?.organizations[0].organizationPath).toBe(
+      "ABC株式会社 技術本部 開発部",
+    );
+    expect(employee?.organizations[1].organizationPath).toBe(
+      "ABC株式会社 営業本部 営業部",
+    );
+    expect(employee?.organizations[2].organizationPath).toBe(
+      "ABC株式会社 管理本部 管理部",
+    );
+  });
+
+  it("存在しない組織IDの階層パスは空文字列が設定される", async () => {
+    const mockEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+    const mockRows = [
+      {
+        id: mockEmployeeId,
+        employeeNumber: "12345",
+        nameKanji: "山田太郎",
+        nameKana: "やまだたろう",
+        photoS3Key: null,
+        mobilePhone: null,
+        email: "yamada@example.com",
+        hireDate: "2020-04-01",
+        organizationId: "nonexistent-org",
+        organizationName: "存在しない部署",
+        position: null,
+      },
+    ];
+
+    // Mock db.select chain
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(mockRows),
+    };
+
+    vi.mocked(db.select).mockReturnValue(mockSelect as MockChain);
+
+    // Mock db.execute - 存在しない組織のため、クエリ結果は空
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([]);
+
+    // Execute
+    const employee = await getEmployeeById(mockEmployeeId);
+
+    // Assertions
+    expect(employee).toBeTruthy();
+    expect(employee?.organizations).toHaveLength(1);
+    // 存在しない組織IDの場合、空文字列が設定される
+    expect(employee?.organizations[0].organizationPath).toBe("");
   });
 });
 
