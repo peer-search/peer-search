@@ -10,7 +10,9 @@ export interface EmployeeCardProps {
 export function EmployeeCard({ employee }: EmployeeCardProps) {
   return (
     <Link href={`/employees/${employee.id}`} className="block">
+      {/* biome-ignore lint/a11y/useSemanticElements: CardコンポーネントはHTMLのarticle要素ではないため、role属性が必要 */}
       <Card
+        role="article"
         className="transition-all hover:border-gray-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500"
         aria-label={`${employee.nameKanji}の社員カード`}
       >
