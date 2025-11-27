@@ -80,8 +80,8 @@
 
 ### Phase 4: データ取得重複解消
 
-- [ ] 4. 社員詳細ページのキャッシュ実装
-- [ ] 4.1 React cache() の適用
+- [x] 4. 社員詳細ページのキャッシュ実装
+- [x] 4.1 React cache() の適用
   - `app/employees/[employeeId]/page.tsx` の冒頭に `import { cache } from 'react'` を追加
   - `const cachedGetEmployeeById = cache(getEmployeeById)` を定義
   - `generateMetadata()` 内（20行）で `cachedGetEmployeeById(employeeId)` を使用
@@ -90,7 +90,7 @@
   - 既存の `generateMetadata()` の戻り値型と `Props` 定義を変更しない
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 7.2, 7.4_
 
-- [ ] 4.2* (P) キャッシュ動作の検証テスト
+- [x] 4.2* (P) キャッシュ動作の検証テスト
   - 同一リクエスト内で異なる `employeeId` を連続呼び出しした際のキャッシュ動作を検証
   - `generateMetadata()` とページコンポーネントで `getEmployeeById()` が1回のみ実行されることを確認
   - キャッシュが正しく機能していることをログで検証
