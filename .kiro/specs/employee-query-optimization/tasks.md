@@ -100,7 +100,7 @@
 ### Phase 5: 検証と最適化
 
 - [ ] 5. データベースインデックス検証
-- [ ] 5.1 (P) インデックスの存在確認
+- [x] 5.1 (P) インデックスの存在確認
   - `organizations` テーブルの `id` カラムに主キーインデックスが存在することを確認
   - `organizations` テーブルの `parent_id` カラムにインデックス（`idx_organizations_parent_id`）が存在することを確認
   - `employee_organizations` テーブルの `employee_id` および `organization_id` カラムにインデックスが存在することを確認
