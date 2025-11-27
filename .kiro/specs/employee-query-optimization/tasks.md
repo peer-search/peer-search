@@ -10,8 +10,8 @@
 
 ### Phase 1: 組織階層パス一括取得機能の実装
 
-- [ ] 1. 組織階層パス一括取得関数の実装
-- [ ] 1.1 (P) `buildOrganizationPathsBatch` 関数の実装
+- [x] 1. 組織階層パス一括取得関数の実装
+- [x] 1.1 (P) `buildOrganizationPathsBatch` 関数の実装
   - 複数の組織IDを受け取り、1回のWITH RECURSIVEクエリで全組織の階層パスを取得する関数を実装
   - PostgreSQLのUNION ALLを使用して複数起点の再帰CTEを構築
   - `GROUP BY organization_id` と `STRING_AGG(name, ' ' ORDER BY level ASC)` で階層パスを生成
@@ -21,14 +21,14 @@
   - 存在しない組織IDの場合は階層パスを空文字列として扱う
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 1.2 (P) パフォーマンス計測とログ出力の実装
+- [x] 1.2 (P) パフォーマンス計測とログ出力の実装
   - `buildOrganizationPathsBatch` 内で `performance.now()` を使用した実行時間計測を実装
   - 500ms超過時に警告ログを出力（既存の `searchEmployees()` パターンを踏襲）
   - ログメッセージに処理対象の組織ID数を含める
   - ログフォーマット: `[Performance Warning] Batch organization path query took Xms (threshold: 500ms) { organizationCount: N }`
   - _Requirements: 5.1, 5.2, 5.3, 5.5_
 
-- [ ] 1.3 (P) ユニットテストの実装
+- [x] 1.3 (P) ユニットテストの実装
   - 空配列が渡された場合、空Mapを返すテストケースを作成
   - 単一組織IDの場合、正しい階層パスを返すテストケースを作成
   - 複数組織IDの場合、すべての階層パスを含むMapを返すテストケースを作成

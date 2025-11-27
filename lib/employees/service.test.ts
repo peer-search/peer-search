@@ -8,6 +8,7 @@ import type {
   SearchEmployeesParams,
 } from "./service";
 import {
+  buildOrganizationPathsBatch,
   createEmployee,
   deleteEmployee,
   getEmployeeById,
@@ -703,5 +704,134 @@ describe("deleteEmployee", () => {
     // Assert: CASCADE DELETEはDB側の設定で自動実行される
     // employee_organizationsテーブルのレコードも自動削除されることを期待
     expect(mockDelete.where).toHaveBeenCalled();
+  });
+});
+
+describe("buildOrganizationPathsBatch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("空の配列が渡された場合、空Mapを返す", async () => {
+    // Act
+    const result = await buildOrganizationPathsBatch([]);
+
+    // Assert
+    expect(result).toBeInstanceOf(Map);
+    expect(result.size).toBe(0);
+  });
+
+  it("単一の組織IDで正しい階層パスを返す", async () => {
+    const orgId = "550e8400-e29b-41d4-a716-446655440000";
+
+    // Mock db.execute to return organization hierarchy
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: orgId,
+        path: "株式会社ユニリタ 開発本部 製品開発部",
+      },
+    ]);
+
+    // Act
+    const result = await buildOrganizationPathsBatch([orgId]);
+
+    // Assert
+    expect(result).toBeInstanceOf(Map);
+    expect(result.size).toBe(1);
+    expect(result.get(orgId)).toBe("株式会社ユニリタ 開発本部 製品開発部");
+  });
+
+  it("複数の組織IDですべての階層パスを含むMapを返す", async () => {
+    const orgId1 = "550e8400-e29b-41d4-a716-446655440001";
+    const orgId2 = "550e8400-e29b-41d4-a716-446655440002";
+    const orgId3 = "550e8400-e29b-41d4-a716-446655440003";
+
+    // Mock db.execute to return multiple organization hierarchies
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: orgId1,
+        path: "株式会社ユニリタ 開発本部 製品開発部",
+      },
+      {
+        organization_id: orgId2,
+        path: "株式会社ユニリタ 管理本部 総務部",
+      },
+      {
+        organization_id: orgId3,
+        path: "株式会社ユニリタ 営業本部",
+      },
+    ]);
+
+    // Act
+    const result = await buildOrganizationPathsBatch([orgId1, orgId2, orgId3]);
+
+    // Assert
+    expect(result).toBeInstanceOf(Map);
+    expect(result.size).toBe(3);
+    expect(result.get(orgId1)).toBe("株式会社ユニリタ 開発本部 製品開発部");
+    expect(result.get(orgId2)).toBe("株式会社ユニリタ 管理本部 総務部");
+    expect(result.get(orgId3)).toBe("株式会社ユニリタ 営業本部");
+  });
+
+  it("存在しない組織IDが含まれる場合、空文字列を値として返す", async () => {
+    const existingOrgId = "550e8400-e29b-41d4-a716-446655440001";
+    const nonExistentOrgId = "550e8400-e29b-41d4-a716-446655440999";
+
+    // Mock db.execute to return only existing organization
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: existingOrgId,
+        path: "株式会社ユニリタ 開発本部",
+      },
+      // nonExistentOrgId はクエリ結果に含まれない
+    ]);
+
+    // Act
+    const result = await buildOrganizationPathsBatch([
+      existingOrgId,
+      nonExistentOrgId,
+    ]);
+
+    // Assert
+    expect(result).toBeInstanceOf(Map);
+    expect(result.size).toBe(2);
+    expect(result.get(existingOrgId)).toBe("株式会社ユニリタ 開発本部");
+    expect(result.get(nonExistentOrgId)).toBe("");
+  });
+
+  it("階層パスの形式が既存のbuildOrganizationPath()と一致する（半角スペース区切り）", async () => {
+    const orgId = "550e8400-e29b-41d4-a716-446655440000";
+
+    // Mock db.execute to return a 4-level hierarchy
+    (
+      vi.mocked(db.execute).mockResolvedValue as unknown as (
+        value: unknown,
+      ) => void
+    )([
+      {
+        organization_id: orgId,
+        path: "ABC株式会社 技術本部 開発部 第一課",
+      },
+    ]);
+
+    // Act
+    const result = await buildOrganizationPathsBatch([orgId]);
+
+    // Assert: 半角スペース区切りで連結されていることを確認
+    expect(result.get(orgId)).toBe("ABC株式会社 技術本部 開発部 第一課");
+    expect(result.get(orgId)).toContain(" "); // 半角スペースが含まれる
+    expect(result.get(orgId)).not.toContain("　"); // 全角スペースは含まれない
   });
 });
