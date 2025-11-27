@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { DeleteEmployeeDialog } from "@/components/employee/delete-employee-dialog";
 import { EmployeeDetailCard } from "@/components/employee/employee-detail-card";
 import { EmployeeDetailPhoto } from "@/components/employee/employee-detail-photo";
@@ -10,6 +11,9 @@ import { getEmployeeById } from "@/lib/employees/service";
 import { getProfileByUserId } from "@/lib/profiles/service";
 import { getUser } from "@/lib/supabase-auth/auth";
 
+// Cache getEmployeeById to prevent duplicate calls within the same request
+const cachedGetEmployeeById = cache(getEmployeeById);
+
 type Props = {
   params: Promise<{ employeeId: string }>;
   searchParams: Promise<{ mode?: string }>;
@@ -17,7 +21,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { employeeId } = await params;
-  const employee = await getEmployeeById(employeeId);
+  const employee = await cachedGetEmployeeById(employeeId);
 
   return {
     title: employee
@@ -42,7 +46,7 @@ export default async function EmployeeDetailPage({
 
   // 社員データ取得
   const { employeeId } = await params;
-  const employee = await getEmployeeById(employeeId);
+  const employee = await cachedGetEmployeeById(employeeId);
   if (!employee) {
     notFound();
   }

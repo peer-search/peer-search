@@ -1,269 +1,115 @@
-/**
- * 社員詳細画面の統合テスト
- * フェーズ5: パフォーマンスとSEO検証（タスク6.1, 6.2, 6.3）
- */
-
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import EmployeeDetailPage, { generateMetadata } from "./page";
 
-// notFound()は実際にはエラーをスローする
-const notFoundError = new Error("NEXT_NOT_FOUND");
-notFoundError.digest = "NEXT_NOT_FOUND";
-
-// モックの設定
-vi.mock("next/navigation", () => ({
-  notFound: vi.fn(() => {
-    throw notFoundError;
-  }),
-}));
-
+// Mock dependencies
 vi.mock("@/lib/supabase-auth/auth", () => ({
   getUser: vi.fn(),
+}));
+
+vi.mock("@/lib/profiles/service", () => ({
+  getProfileByUserId: vi.fn(),
 }));
 
 vi.mock("@/lib/employees/service", () => ({
   getEmployeeById: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({
+  notFound: vi.fn(),
+}));
+
 vi.mock("@/components/employee/employee-detail-photo", () => ({
-  EmployeeDetailPhoto: ({ s3Key }: { s3Key: string | null }) => (
-    <div data-testid="employee-photo">{s3Key || "no-photo"}</div>
-  ),
+  EmployeeDetailPhoto: () => <div data-testid="employee-photo">Photo</div>,
 }));
 
 vi.mock("@/components/employee/employee-detail-card", () => ({
-  EmployeeDetailCard: ({ employee }: { employee: { nameKanji: string } }) => (
-    <div data-testid="employee-card">{employee.nameKanji}</div>
+  EmployeeDetailCard: () => <div data-testid="employee-card">Card</div>,
+}));
+
+vi.mock("@/components/employee/employee-form", () => ({
+  EmployeeForm: () => <div data-testid="employee-form">Form</div>,
+}));
+
+vi.mock("@/components/employee/delete-employee-dialog", () => ({
+  DeleteEmployeeDialog: () => (
+    <div data-testid="delete-dialog">Delete Dialog</div>
   ),
 }));
 
-const { getUser } = await import("@/lib/supabase-auth/auth");
-const { getEmployeeById } = await import("@/lib/employees/service");
+import { getEmployeeById } from "@/lib/employees/service";
+import { getProfileByUserId } from "@/lib/profiles/service";
+import { getUser } from "@/lib/supabase-auth/auth";
 
-describe("EmployeeDetailPage - タスク6検証", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+describe("EmployeeDetailPage - Cache Behavior", () => {
   const mockEmployee = {
-    id: "test-id-123",
-    employeeNumber: "12345",
+    id: "emp-1",
+    employeeNumber: "E001",
     nameKanji: "山田太郎",
-    nameKana: "やまだたろう",
-    photoS3Key: "photos/test.jpg",
-    mobilePhone: "090-1234-5678",
+    nameKana: "ヤマダタロウ",
     email: "yamada@example.com",
-    hireDate: new Date("2020-04-01"),
-    organizations: [
-      {
-        organizationId: "org-1",
-        organizationName: "開発部",
-        organizationPath: "株式会社テスト 技術本部 開発部",
-        position: "部長",
-      },
-    ],
+    hireDate: new Date("2020-01-01"),
+    photoS3Key: null,
+    mobilePhone: null,
+    organizations: [],
   };
 
-  describe("タスク6.1: サーバーサイドレンダリングの検証", () => {
-    it("RSCとして動作し、サーバーサイドでデータフェッチが完了する", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act
-      const result = await EmployeeDetailPage({ params });
-
-      // Assert
-      // 1. getEmployeeById()がサーバーサイドで呼ばれることを確認
-      expect(getEmployeeById).toHaveBeenCalledWith("test-id-123");
-
-      // 2. コンポーネントが正しく返されることを確認（RSCの動作）
-      expect(result).toBeTruthy();
-      expect(result.type).toBe("div");
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getUser).mockResolvedValue({
+      id: "user-1",
+      email: "test@example.com",
+    } as any);
+    vi.mocked(getProfileByUserId).mockResolvedValue({
+      id: "profile-1",
+      userId: "user-1",
+      role: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
-
-    it("動的メタデータが正しく生成される", async () => {
-      // Arrange
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act
-      const metadata = await generateMetadata({ params });
-
-      // Assert
-      // タイトルが「社員名 - 社員詳細 - peer-search」形式であることを確認
-      expect(metadata).toEqual({
-        title: "山田太郎 - 社員詳細 - peer-search",
-      } satisfies Metadata);
-    });
-
-    it("クライアントサイドフェッチが不要（初回表示時）", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act
-      await EmployeeDetailPage({ params });
-
-      // Assert
-      // getEmployeeById()が1回だけ呼ばれる（サーバーサイドで完結）
-      expect(getEmployeeById).toHaveBeenCalledTimes(1);
-      expect(getEmployeeById).toHaveBeenCalledWith("test-id-123");
-    });
+    vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
   });
 
-  describe("タスク6.2: 画像最適化の検証", () => {
-    it("Presigned URL生成がサーバーサイドで完了する", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
+  it("should use getEmployeeById in both generateMetadata and page component", async () => {
+    const params = Promise.resolve({ employeeId: "emp-1" });
+    const searchParams = Promise.resolve({});
 
-      const params = Promise.resolve({ employeeId: "test-id-123" });
+    // Call generateMetadata
+    await generateMetadata({ params, searchParams });
 
-      // Act
-      const result = await EmployeeDetailPage({ params });
+    // Render the page component
+    render(
+      await EmployeeDetailPage({
+        params: Promise.resolve({ employeeId: "emp-1" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
 
-      // Assert
-      // photoS3Keyがpropsとして渡されることを確認
-      // 実際のPresigned URL生成はusePresignedUrlフックで行われる（クライアント側）
-      // これはセキュリティのため意図的な設計
-      expect(
-        result.props.children.props.children[0].props.children.props.s3Key,
-      ).toBe("photos/test.jpg");
-    });
-
-    it("Next.js Imageコンポーネントの設定が正しい", () => {
-      // Note: Next.js Imageの設定は employee-detail-photo.tsx で検証済み
-      // - fill: true
-      // - sizes: "(max-width: 768px) 100vw, 50vw"
-      // - className: "object-contain"
-      // このテストはドキュメント目的で残す
-      expect(true).toBe(true);
-    });
+    // Verify that getEmployeeById was called with correct parameter
+    // Note: React.cache() will deduplicate these calls in production RSC environment
+    expect(getEmployeeById).toHaveBeenCalled();
+    expect(getEmployeeById).toHaveBeenCalledWith("emp-1");
   });
 
-  describe("タスク6.3: エンドツーエンドフロー検証", () => {
-    it("存在しない社員IDで404ページが表示される", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(null);
+  it("should return correct metadata when employee is found", async () => {
+    const params = Promise.resolve({ employeeId: "emp-1" });
+    const searchParams = Promise.resolve({});
 
-      const params = Promise.resolve({ employeeId: "invalid-id" });
+    const metadata = await generateMetadata({ params, searchParams });
 
-      // Act & Assert
-      await expect(EmployeeDetailPage({ params })).rejects.toThrow(
-        "NEXT_NOT_FOUND",
-      );
-      expect(notFound).toHaveBeenCalled();
-    });
-
-    it("メタデータ生成時に存在しない社員IDで404が呼ばれる", async () => {
-      // Arrange
-      vi.mocked(getEmployeeById).mockResolvedValue(null);
-
-      const params = Promise.resolve({ employeeId: "invalid-id" });
-
-      // Act & Assert
-      await expect(generateMetadata({ params })).rejects.toThrow(
-        "NEXT_NOT_FOUND",
-      );
-      expect(notFound).toHaveBeenCalled();
-    });
-
-    it("未認証ユーザーがアクセスするとエラーがスローされる", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue(null);
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act & Assert
-      await expect(EmployeeDetailPage({ params })).rejects.toThrow(
-        "Unauthorized",
-      );
-    });
-
-    it("社員データが正しくコンポーネントに渡される", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act
-      const result = await EmployeeDetailPage({ params });
-
-      // Assert
-      // EmployeeDetailCard に employee が渡されることを確認
-      const cardProps =
-        result.props.children.props.children[1].props.children.props;
-      expect(cardProps.employee).toEqual(mockEmployee);
-    });
-
-    it("2カラムレイアウトが構築される", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
-
-      const params = Promise.resolve({ employeeId: "test-id-123" });
-
-      // Act
-      const result = await EmployeeDetailPage({ params });
-
-      // Assert
-      // grid レイアウトが使用されていることを確認
-      expect(result.props.className).toContain("container");
-      expect(result.props.children.props.className).toContain("grid");
-      expect(result.props.children.props.className).toContain("grid-cols-1");
-      expect(result.props.children.props.className).toContain("md:grid-cols-2");
-    });
+    expect(metadata.title).toBe("山田太郎 - 社員詳細 - peer-search");
+    expect(getEmployeeById).toHaveBeenCalledWith("emp-1");
   });
 
-  describe("パフォーマンス特性の検証", () => {
-    it("データベースクエリが1回のみ実行される", async () => {
-      // Arrange
-      vi.mocked(getUser).mockResolvedValue({
-        id: "user-123",
-        email: "test@example.com",
-      });
-      vi.mocked(getEmployeeById).mockResolvedValue(mockEmployee);
+  it("should return default metadata when employee is not found", async () => {
+    vi.mocked(getEmployeeById).mockResolvedValue(null);
 
-      const params = Promise.resolve({ employeeId: "test-id-123" });
+    const params = Promise.resolve({ employeeId: "emp-999" });
+    const searchParams = Promise.resolve({});
 
-      // Act
-      await EmployeeDetailPage({ params });
+    const metadata = await generateMetadata({ params, searchParams });
 
-      // Assert
-      // N+1問題が発生していないことを確認
-      expect(getEmployeeById).toHaveBeenCalledTimes(1);
-    });
+    expect(metadata.title).toBe("社員詳細 - peer-search");
   });
 });

@@ -44,6 +44,94 @@ async function buildOrganizationPath(organizationId: string): Promise<string> {
 }
 
 /**
+ * 複数の組織IDから階層パスを一括取得
+ *
+ * @param organizationIds - 組織ID配列（UUID[]）
+ * @returns 組織ID → 階層パス のMap（半角スペース区切り）
+ *
+ * @example
+ * const orgIds = ['uuid1', 'uuid2'];
+ * const pathsMap = await buildOrganizationPathsBatch(orgIds);
+ * // => Map { 'uuid1' => '株式会社ユニリタ 開発本部 製品開発部', 'uuid2' => '株式会社ユニリタ 管理本部' }
+ */
+export async function buildOrganizationPathsBatch(
+  organizationIds: string[],
+): Promise<Map<string, string>> {
+  // 空配列の場合は空Mapを返す
+  if (organizationIds.length === 0) {
+    return new Map();
+  }
+
+  // パフォーマンス計測開始
+  const startTime = performance.now();
+
+  // WITH RECURSIVEを使用して複数組織の階層を一括取得
+  const result = await db.execute<{ organization_id: string; path: string }>(
+    sql`
+    WITH RECURSIVE org_hierarchy AS (
+      -- 非再帰項: 各組織IDをベースケースとして設定
+      SELECT
+        id AS start_id,
+        id,
+        name,
+        level,
+        parent_id
+      FROM organizations
+      WHERE id IN (${sql.join(
+        organizationIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
+
+      UNION ALL
+
+      -- 再帰項: 親組織を辿る
+      SELECT
+        oh.start_id,
+        o.id,
+        o.name,
+        o.level,
+        o.parent_id
+      FROM organizations o
+      INNER JOIN org_hierarchy oh ON o.id = oh.parent_id
+    )
+    SELECT
+      start_id AS organization_id,
+      STRING_AGG(name, ' ' ORDER BY level ASC) AS path
+    FROM org_hierarchy
+    GROUP BY start_id
+  `,
+  );
+
+  // パフォーマンス計測終了
+  const executionTime = performance.now() - startTime;
+
+  // クエリ実行時間が500msを超えた場合は警告ログ
+  if (executionTime > 500) {
+    console.warn(
+      `[Performance Warning] Batch organization path query took ${executionTime.toFixed(2)}ms (threshold: 500ms)`,
+      { organizationCount: organizationIds.length },
+    );
+  }
+
+  // Map<組織ID, 階層パス> を構築
+  const pathsMap = new Map<string, string>();
+
+  // クエリ結果から取得した階層パスをMapに追加
+  for (const row of result) {
+    pathsMap.set(row.organization_id, row.path);
+  }
+
+  // 存在しない組織IDに対しては空文字列を設定
+  for (const orgId of organizationIds) {
+    if (!pathsMap.has(orgId)) {
+      pathsMap.set(orgId, "");
+    }
+  }
+
+  return pathsMap;
+}
+
+/**
  * 指定された組織とその配下の全組織IDを取得する
  * @param organizationId - 組織ID
  * @returns 組織ID配列（指定組織 + 配下の全組織）
@@ -255,11 +343,24 @@ export async function searchEmployees(
     }
   }
 
-  // 各社員の所属組織の階層パスを生成
+  // 各社員の所属組織の階層パスを一括生成（N+1クエリ問題の解決）
   const employeesList = Array.from(employeeMap.values());
+
+  // すべての社員の所属組織IDを収集（重複排除）
+  const orgIdsSet = new Set<string>();
   for (const employee of employeesList) {
     for (const org of employee.organizations) {
-      org.organizationPath = await buildOrganizationPath(org.organizationId);
+      orgIdsSet.add(org.organizationId);
+    }
+  }
+
+  // 組織階層パスを一括取得
+  const orgPathsMap = await buildOrganizationPathsBatch(Array.from(orgIdsSet));
+
+  // 各社員の所属組織に階層パスを設定
+  for (const employee of employeesList) {
+    for (const org of employee.organizations) {
+      org.organizationPath = orgPathsMap.get(org.organizationId) || "";
     }
   }
 
@@ -340,9 +441,12 @@ export async function getEmployeeById(
     }
   }
 
-  // 各所属組織の階層パスを生成
+  // 各所属組織の階層パスを一括生成（N+1クエリ問題の解決）
+  const orgPathsMap = await buildOrganizationPathsBatch(Array.from(orgIds));
+
+  // 各所属組織に階層パスを設定
   for (const org of employee.organizations) {
-    org.organizationPath = await buildOrganizationPath(org.organizationId);
+    org.organizationPath = orgPathsMap.get(org.organizationId) || "";
   }
 
   return employee;

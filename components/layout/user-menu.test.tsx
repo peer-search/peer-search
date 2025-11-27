@@ -10,15 +10,13 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
-// Mock Supabase client
-const mockSignOut = vi.fn();
-vi.mock("@/lib/supabase-auth/client", () => ({
-  createClient: vi.fn(() => ({
-    auth: {
-      signOut: mockSignOut,
-    },
-  })),
+// Mock Supabase auth
+vi.mock("@/lib/supabase-auth/authGoogle", () => ({
+  signOut: vi.fn(),
 }));
+
+// Get reference to mocked signOut
+import { signOut as mockSignOut } from "@/lib/supabase-auth/authGoogle";
 
 describe("UserMenu Component", () => {
   const mockPush = vi.fn();
@@ -39,7 +37,7 @@ describe("UserMenu Component", () => {
     (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({
       push: mockPush,
     });
-    mockSignOut.mockResolvedValue({ error: null });
+    mockSignOut.mockResolvedValue(undefined);
   });
 
   describe("Basic Rendering", () => {
@@ -161,18 +159,15 @@ describe("UserMenu Component", () => {
       const logoutItem = screen.getByRole("menuitem", { name: /ログアウト/i });
       await user.click(logoutItem);
 
+      // signOut is a server action that internally redirects to /login
       expect(mockSignOut).toHaveBeenCalled();
-      // Wait for async operation
-      await vi.waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/login");
-      });
     });
 
     it("should handle logout error gracefully", async () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
-      mockSignOut.mockResolvedValueOnce({ error: new Error("Logout failed") });
+      mockSignOut.mockRejectedValueOnce(new Error("Logout failed"));
 
       const user = userEvent.setup();
       render(<UserMenu user={mockUser} isAdmin={false} />);
@@ -192,7 +187,6 @@ describe("UserMenu Component", () => {
           expect.any(Error),
         );
       });
-      expect(mockPush).not.toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });

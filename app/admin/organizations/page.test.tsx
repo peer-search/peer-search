@@ -293,9 +293,11 @@ describe("AdminOrganizationsPage - タスク7.1検証", () => {
       const result = await AdminOrganizationsPage();
 
       // Assert
-      expect(result.type).toBe("div");
-      expect(result.props.className).toContain("flex");
-      expect(result.props.className).toContain("md:flex-row");
+      // OrganizationProviderでラップされたdivが返される
+      expect(result).toBeTruthy();
+      expect(result.props.children.type).toBe("div");
+      expect(result.props.children.props.className).toContain("flex");
+      expect(result.props.children.props.className).toContain("md:flex-row");
     });
 
     it("OrganizationProviderでラップされる", async () => {
@@ -324,9 +326,11 @@ describe("AdminOrganizationsPage - タスク7.1検証", () => {
       // Assert
       // OrganizationProviderがレンダリングされることを確認
       expect(result).toBeTruthy();
-      expect(result.type).toBe("div");
-      // 2つの主要な構造（リストビューと編集パネル）がレンダリングされることを確認
+      // 子要素がdivであることを確認
       expect(result.props.children).toBeTruthy();
+      expect(result.props.children.type).toBe("div");
+      // 2つの主要な構造（リストビューと編集パネル）がレンダリングされることを確認
+      expect(result.props.children.props.children).toBeTruthy();
     });
 
     it("OrganizationListViewに組織データが渡される", async () => {
@@ -429,7 +433,7 @@ describe("AdminOrganizationsPage - タスク7.1検証", () => {
 
       // コンポーネントが正しく返されることを確認（RSCの動作）
       expect(result).toBeTruthy();
-      expect(result.type).toBe("div");
+      expect(result.props.children).toBeTruthy();
     });
   });
 });
