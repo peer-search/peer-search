@@ -208,6 +208,26 @@ export async function searchEmployees(
 ): Promise<Employee[]> {
   const { name, employeeNumber, hireYear, orgId, sort, order } = params;
 
+  // 組織フィルタがある場合は、対象社員のIDを先に取得
+  let targetEmployeeIds: string[] | null = null;
+  if (orgId) {
+    const orgIds = await getDescendantOrganizationIds(orgId);
+    const orgFilteredEmployees = await db
+      .selectDistinct({ id: employees.id })
+      .from(employees)
+      .innerJoin(
+        employeeOrganizations,
+        eq(employees.id, employeeOrganizations.employeeId),
+      )
+      .where(inArray(employeeOrganizations.organizationId, orgIds));
+    targetEmployeeIds = orgFilteredEmployees.map((row) => row.id);
+
+    // 該当する社員がいない場合は空配列を返す
+    if (targetEmployeeIds.length === 0) {
+      return [];
+    }
+  }
+
   // ベースクエリ: employees LEFT JOIN employee_organizations LEFT JOIN organizations
   const baseQuery = db
     .select({
@@ -238,6 +258,11 @@ export async function searchEmployees(
   // WHERE条件の構築
   const conditions = [];
 
+  // 組織フィルタで絞り込まれた社員IDでフィルタ
+  if (targetEmployeeIds !== null) {
+    conditions.push(inArray(employees.id, targetEmployeeIds));
+  }
+
   // 氏名検索（name_kanji OR name_kana の部分一致）
   if (name) {
     conditions.push(
@@ -258,12 +283,6 @@ export async function searchEmployees(
     conditions.push(
       sql`EXTRACT(YEAR FROM ${employees.hireDate}) = ${hireYear}`,
     );
-  }
-
-  // 組織フィルタ（階層対応：指定組織とその配下の全組織を含む）
-  if (orgId) {
-    const orgIds = await getDescendantOrganizationIds(orgId);
-    conditions.push(inArray(employeeOrganizations.organizationId, orgIds));
   }
 
   let query = baseQuery;
