@@ -50,10 +50,11 @@ pnpm test:coverage     # Coverage report
 ```
 
 **Test Strategy**:
-- **Unit Tests**: ビジネスロジック・ユーティリティ関数（例: ツリー構造変換、バリデーション）
-- **Component Tests**: React Componentsの描画・インタラクション（例: OrganizationCard、EmployeeForm）
-- **Integration Tests**: Server Actionsとデータベース連携のエンドツーエンドテスト（例: 社員CRUD操作）
+- **Unit Tests**: ビジネスロジック・ユーティリティ関数（例: ツリー構造変換、バリデーション、型定義）
+- **Component Tests**: React Componentsの描画・インタラクション（例: OrganizationCard、EmployeeForm、PageHeader）
+- **Integration Tests**: Server Actionsとデータベース連携のエンドツーエンドテスト（例: 社員CRUD操作、権限チェック）
 - **Performance & SEO Tests**: パフォーマンス、アクセシビリティ、SEO検証
+- **Schema Verification Tests**: データベーススキーマとインデックスの検証
 
 ## Development Environment
 
