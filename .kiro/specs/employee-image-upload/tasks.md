@@ -63,9 +63,9 @@
 - **Acceptance**: すべてのテストケースがパスする
 - **Status**: ✅ 完了 - 22個のテストケース追加、全テスト（39/39）パス
 
-## Task 3: Presigned PUT URL発行APIの実装 (P)
+## Task 3: Presigned PUT URL発行APIの実装 (P) ✅
 
-### 3.1 PUT用Presigned URL発行APIエンドポイントを実装する
+### 3.1 PUT用Presigned URL発行APIエンドポイントを実装する ✅
 - **Requirements**: 1.5, 6.2, 6.4, 6.5, 6.6, 6.7
 - **Implementation Notes**:
   - `app/api/s3/upload/presign/route.ts`を新規作成
@@ -82,8 +82,9 @@
   - 未認証ユーザーに401エラーを返却
   - 非管理者に403エラーを返却
   - 不正なMIMEタイプに400エラーを返却
+- **Status**: ✅ 完了 - APIエンドポイント実装、11個のテストケース全パス
 
-### 3.2 Presigned URL発行APIの統合テストを実装する
+### 3.2 Presigned URL発行APIの統合テストを実装する ✅
 - **Requirements**: 1.5, 6.2, 6.4, 6.5
 - **Implementation Notes**:
   - 認証・権限チェックの統合検証
@@ -92,6 +93,7 @@
   - エラーレスポンスの検証
 - **Dependencies**: Task 3.1
 - **Acceptance**: すべての統合テストがパスする
+- **Status**: ✅ 完了 - 統合テストを`route.test.ts`に実装、認証・権限・バリデーション・S3キー生成・エラーハンドリングを検証
 
 ## Task 4: S3削除ユーティリティの実装 (P)
 
