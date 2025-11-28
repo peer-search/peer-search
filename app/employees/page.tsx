@@ -1,4 +1,5 @@
 import { EmployeeCardList } from "@/components/employee/employee-card-list";
+import { SortControls } from "@/components/employee/sort-controls";
 import type { Employee, SearchEmployeesParams } from "@/lib/employees/service";
 import { searchEmployees } from "@/lib/employees/service";
 import { getUser } from "@/lib/supabase-auth/auth";
@@ -117,6 +118,11 @@ export default async function EmployeesPage({
       {/* 結果数表示 */}
       <div className="mb-4 text-sm text-gray-600">
         {employees.length}件の社員が見つかりました
+      </div>
+
+      {/* ソートコントロール */}
+      <div className="mb-6">
+        <SortControls currentSort={params.sort} currentOrder={params.order} />
       </div>
 
       {/* 社員カードリスト */}

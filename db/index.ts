@@ -53,6 +53,6 @@ const client = postgres(process.env.DATABASE_URL, {
   // Vercelのサーバーレス環境用の設定
   max: 1, // サーバーレス環境では接続を1つに制限
   idle_timeout: 20, // アイドルタイムアウトを短く設定
-  connect_timeout: 10, // 接続タイムアウトを10秒に設定
+  connect_timeout: 60, // 接続タイムアウトを60秒に設定（Transaction Pooling Modeの接続遅延に対応）
 });
 export const db = drizzle(client, { schema });
