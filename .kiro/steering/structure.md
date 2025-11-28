@@ -44,6 +44,7 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     organization-card-list.test.tsx
     organization-context.tsx          # Context API for selection state
     organization-list-view.tsx        # List view with tree structure
+    organization-list-item.tsx        # Individual list item
     organization-edit-panel.tsx       # Edit/Create panel
     organization-edit-form.tsx        # Form component (create/edit)
     delete-organization-dialog.tsx    # Delete confirmation
@@ -60,8 +61,10 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     sort-controls.tsx
   layout/
     page-header.tsx
+    page-header-wrapper.tsx       # Client wrapper for page header
     search-bar.tsx
     user-menu.tsx
+  web-vitals.tsx                  # Web vitals monitoring
 ```
 
 ### Library Utils (`/lib/`)
@@ -74,16 +77,21 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
   supabase-auth/       # Auth utilities
     auth.ts
     server.ts
+    client.ts          # Client-side auth utilities
     middleware.ts
     authGoogle.ts
   organizations/       # Organization logic
     types.ts
+    types.test.ts
     service.ts
     service.test.ts
     actions.ts           # Server Actions (CRUD operations)
     actions.test.ts
+    actions.integration.test.ts
     tree.ts              # Tree transformation utilities
     tree.test.ts
+    schema-verification.test.ts
+    index.ts
   employees/           # Employee CRUD & search logic
     service.ts
     service.test.ts
@@ -93,13 +101,19 @@ Next.js App Routerの規約に従った機能ベースの構成。UIコンポー
     validation.test.ts
     types.ts             # Employee type definitions
     integration.test.ts  # Integration tests
+    edit-integration.test.ts
+    delete-integration.test.ts
+    permission-integration.test.ts
+    performance-seo-validation.test.ts
   profiles/            # User profile & permissions
     service.ts
     service.test.ts
   s3/                  # AWS S3 utilities
     client.ts
     presigned-url.ts
+    presigned-url.test.ts
     url.ts
+    url.test.ts
     use-presigned-url.ts
 ```
 
