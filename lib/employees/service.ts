@@ -491,7 +491,7 @@ export async function createEmployee(
       email: data.email,
       hireDate: data.hireDate, // string in "YYYY-MM-DD" format
       mobilePhone: data.mobilePhone || null,
-      photoS3Key: null, // 初期値はnull
+      photoS3Key: data.photoS3Key || null, // S3キーが提供されていればセット
     })
     .returning();
 
@@ -523,6 +523,7 @@ export async function updateEmployee(
       email: data.email,
       hireDate: data.hireDate, // string in "YYYY-MM-DD" format
       mobilePhone: data.mobilePhone,
+      photoS3Key: data.photoS3Key !== undefined ? data.photoS3Key : undefined,
     })
     .where(eq(employees.id, employeeId))
     .returning();

@@ -3,8 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getProfileByUserId } from "@/lib/profiles/service";
+import { deleteS3Object } from "@/lib/s3/delete";
 import { getUser } from "@/lib/supabase-auth/auth";
-import { createEmployee, deleteEmployee, updateEmployee } from "./service";
+import {
+  createEmployee,
+  deleteEmployee,
+  getEmployeeById,
+  updateEmployee,
+} from "./service";
 import type {
   ActionResult,
   CreateEmployeeInput,
@@ -56,6 +62,7 @@ export async function createEmployeeAction(
   }
 
   // 2. フォームデータ抽出
+  const photoS3KeyValue = formData.get("photoS3Key") as string;
   const input: CreateEmployeeInput = {
     employeeNumber: formData.get("employeeNumber") as string,
     nameKanji: formData.get("nameKanji") as string,
@@ -63,6 +70,7 @@ export async function createEmployeeAction(
     email: formData.get("email") as string,
     hireDate: formData.get("hireDate") as string,
     mobilePhone: (formData.get("mobilePhone") as string) || undefined,
+    photoS3Key: photoS3KeyValue || undefined,
   };
 
   // 3. バリデーション
@@ -147,12 +155,15 @@ export async function updateEmployeeAction(
   }
 
   // 2. フォームデータ抽出
+  const photoS3KeyValue = formData.get("photoS3Key") as string;
   const input: UpdateEmployeeInput = {
     nameKanji: formData.get("nameKanji") as string,
     nameKana: formData.get("nameKana") as string,
     email: formData.get("email") as string,
     hireDate: formData.get("hireDate") as string,
     mobilePhone: (formData.get("mobilePhone") as string) || null,
+    photoS3Key:
+      photoS3KeyValue === "null" ? null : photoS3KeyValue || undefined,
   };
 
   // 3. バリデーション
@@ -164,11 +175,41 @@ export async function updateEmployeeAction(
     };
   }
 
-  // 4. データベース操作
+  // 4. 写真更新時に古いS3キーを取得（ベストエフォート削除のため）
+  let oldPhotoS3Key: string | null = null;
+  if (input.photoS3Key !== undefined) {
+    try {
+      const existingEmployee = await getEmployeeById(employeeId);
+      if (existingEmployee) {
+        oldPhotoS3Key = existingEmployee.photoS3Key;
+      }
+    } catch (error) {
+      console.error("Failed to fetch existing employee photo:", error);
+      // 取得失敗してもDB更新は継続（削除スキップ）
+    }
+  }
+
+  // 5. データベース操作
   try {
     await updateEmployee(employeeId, input);
 
-    // 5. キャッシュ再検証
+    // 6. 古いS3オブジェクト削除（ベストエフォート）
+    // photoS3Keyが更新され、かつ古いキーが存在し、新旧が異なる場合のみ削除
+    if (
+      input.photoS3Key !== undefined &&
+      oldPhotoS3Key &&
+      oldPhotoS3Key !== input.photoS3Key
+    ) {
+      const deleteSuccess = await deleteS3Object(oldPhotoS3Key);
+      if (!deleteSuccess) {
+        // 削除失敗してもDB更新は成功（要件3.6準拠）
+        console.warn(
+          `Failed to delete old S3 object, but DB update succeeded: ${oldPhotoS3Key}`,
+        );
+      }
+    }
+
+    // 7. キャッシュ再検証
     revalidatePath(`/employees/${employeeId}`);
     revalidatePath("/employees");
 
