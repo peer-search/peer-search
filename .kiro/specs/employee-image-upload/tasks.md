@@ -33,9 +33,9 @@
 - **Acceptance**: すべての環境変数が設定され、S3クライアントが正常に動作する
 - **Status**: ✅ 完了 - `scripts/test-s3-connection.ts`でS3接続テスト成功、環境変数検証完了
 
-## Task 2: ファイルバリデーションサービスの実装 (P)
+## Task 2: ファイルバリデーションサービスの実装 (P) ✅
 
-### 2.1 写真ファイルバリデーション関数を実装する
+### 2.1 写真ファイルバリデーション関数を実装する ✅
 - **Requirements**: 1.3, 1.4, 6.7
 - **Implementation Notes**:
   - `lib/employees/validation.ts`に`validatePhotoFile`関数を追加
@@ -49,8 +49,9 @@
   - 許可形式のファイルで`success: true`を返却
   - 不許可形式で`fieldErrors.photo`にエラーメッセージを返却
   - 10MB超過で`fieldErrors.photo`にエラーメッセージを返却
+- **Status**: ✅ 完了 - `validatePhotoFile`関数実装、定数定義完了
 
-### 2.2 バリデーション関数のユニットテストを実装する
+### 2.2 バリデーション関数のユニットテストを実装する ✅
 - **Requirements**: 1.3, 1.4, 6.7
 - **Implementation Notes**:
   - `lib/employees/validation.test.ts`にテストケースを追加
@@ -60,6 +61,7 @@
   - エッジケース（空ファイル、MIMEタイプ未定義）を検証
 - **Dependencies**: Task 2.1
 - **Acceptance**: すべてのテストケースがパスする
+- **Status**: ✅ 完了 - 22個のテストケース追加、全テスト（39/39）パス
 
 ## Task 3: Presigned PUT URL発行APIの実装 (P)
 
