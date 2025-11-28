@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CreateEmployeeInput } from "./types";
-import { validateEmployeeData } from "./validation";
+import { validateEmployeeData, validatePhotoFile } from "./validation";
 
 describe("validateEmployeeData", () => {
   describe("成功パターン", () => {
@@ -324,6 +324,238 @@ describe("validateEmployeeData", () => {
       expect(result.fieldErrors?.nameKana).toBeDefined();
       expect(result.fieldErrors?.email).toBeDefined();
       expect(result.fieldErrors?.hireDate).toBeDefined();
+    });
+  });
+});
+
+describe("validatePhotoFile", () => {
+  describe("クライアント側バリデーション（Fileオブジェクト）", () => {
+    it("should accept JPEG files", () => {
+      const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept PNG files", () => {
+      const file = new File(["dummy"], "photo.png", { type: "image/png" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept GIF files", () => {
+      const file = new File(["dummy"], "photo.gif", { type: "image/gif" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept WebP files", () => {
+      const file = new File(["dummy"], "photo.webp", { type: "image/webp" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should reject BMP files", () => {
+      const file = new File(["dummy"], "photo.bmp", { type: "image/bmp" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain(
+        "JPEG, PNG, GIF, WebP形式",
+      );
+    });
+
+    it("should reject SVG files", () => {
+      const file = new File(["dummy"], "photo.svg", { type: "image/svg+xml" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain(
+        "JPEG, PNG, GIF, WebP形式",
+      );
+    });
+
+    it("should reject PDF files", () => {
+      const file = new File(["dummy"], "document.pdf", {
+        type: "application/pdf",
+      });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 }); // 5MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain(
+        "JPEG, PNG, GIF, WebP形式",
+      );
+    });
+
+    it("should reject files larger than 10MB", () => {
+      const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+      Object.defineProperty(file, "size", { value: 11 * 1024 * 1024 }); // 11MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain("10MB");
+    });
+
+    it("should accept files at exactly 10MB", () => {
+      const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+      Object.defineProperty(file, "size", { value: 10 * 1024 * 1024 }); // 10MB
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept files just under 10MB", () => {
+      const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+      Object.defineProperty(file, "size", { value: 10 * 1024 * 1024 - 1 }); // 10MB - 1 byte
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should reject empty files", () => {
+      const file = new File([""], "photo.jpg", { type: "image/jpeg" });
+      Object.defineProperty(file, "size", { value: 0 });
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+    });
+
+    it("should reject files with undefined MIME type", () => {
+      const file = new File(["dummy"], "photo", { type: "" });
+      Object.defineProperty(file, "size", { value: 5 * 1024 * 1024 });
+
+      const result = validatePhotoFile({ file });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+    });
+  });
+
+  describe("サーバー側バリデーション（mimeType + fileSize）", () => {
+    it("should accept JPEG with valid size", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/jpeg",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept PNG with valid size", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/png",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept GIF with valid size", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/gif",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should accept WebP with valid size", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/webp",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should reject BMP files", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/bmp",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain(
+        "JPEG, PNG, GIF, WebP形式",
+      );
+    });
+
+    it("should reject files larger than 10MB", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/jpeg",
+        fileSize: 11 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+      expect(result.fieldErrors?.photo?.[0]).toContain("10MB");
+    });
+
+    it("should accept files at exactly 10MB", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/jpeg",
+        fileSize: 10 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.fieldErrors).toBeUndefined();
+    });
+
+    it("should reject zero-size files", () => {
+      const result = validatePhotoFile({
+        mimeType: "image/jpeg",
+        fileSize: 0,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
+    });
+
+    it("should reject undefined MIME type", () => {
+      const result = validatePhotoFile({
+        mimeType: "",
+        fileSize: 5 * 1024 * 1024,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.fieldErrors?.photo).toBeDefined();
     });
   });
 });

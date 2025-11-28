@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Profile } from "@/db/schema";
 import * as profileService from "@/lib/profiles/service";
+import * as s3Delete from "@/lib/s3/delete";
 import * as auth from "@/lib/supabase-auth/auth";
 import {
   checkAdminPermission,
@@ -17,6 +18,7 @@ vi.mock("@/db", () => ({
 }));
 vi.mock("@/lib/supabase-auth/auth");
 vi.mock("@/lib/profiles/service");
+vi.mock("@/lib/s3/delete");
 vi.mock("./service");
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
@@ -206,6 +208,50 @@ describe("createEmployeeAction", () => {
       createEmployeeAction(undefined, formData),
     ).rejects.toThrowError(/REDIRECT:\/employees\/emp-new-123/);
   });
+
+  it("写真S3キー付きで社員を作成する", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "admin-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "admin-123",
+      role: "admin",
+    } as Profile);
+    vi.mocked(employeeService.createEmployee).mockResolvedValue({
+      id: "emp-new-456",
+      employeeNumber: "E002",
+      nameKanji: "田中花子",
+      nameKana: "タナカハナコ",
+      email: "tanaka@example.com",
+      hireDate: new Date("2024-02-01"),
+      photoS3Key: "employee-photos/abc123.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+
+    const formData = new FormData();
+    formData.set("employeeNumber", "E002");
+    formData.set("nameKanji", "田中花子");
+    formData.set("nameKana", "タナカハナコ");
+    formData.set("email", "tanaka@example.com");
+    formData.set("hireDate", "2024-02-01");
+    formData.set("photoS3Key", "employee-photos/abc123.jpg");
+
+    // Act & Assert
+    await expect(
+      createEmployeeAction(undefined, formData),
+    ).rejects.toThrowError(/REDIRECT:\/employees\/emp-new-456/);
+    expect(employeeService.createEmployee).toHaveBeenCalledWith({
+      employeeNumber: "E002",
+      nameKanji: "田中花子",
+      nameKana: "タナカハナコ",
+      email: "tanaka@example.com",
+      hireDate: "2024-02-01",
+      mobilePhone: undefined,
+      photoS3Key: "employee-photos/abc123.jpg",
+    });
+  });
 });
 
 describe("updateEmployeeAction", () => {
@@ -295,7 +341,174 @@ describe("updateEmployeeAction", () => {
       email: "yamada2@example.com",
       hireDate: "2024-01-01",
       mobilePhone: null,
+      photoS3Key: undefined,
     });
+  });
+
+  it("写真を更新し、古い写真を削除する", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "admin-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "admin-123",
+      role: "admin",
+    } as Profile);
+    vi.mocked(employeeService.getEmployeeById).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: "employee-photos/old123.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(employeeService.updateEmployee).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: "employee-photos/new456.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(s3Delete.deleteS3Object).mockResolvedValue(true);
+
+    const formData = new FormData();
+    formData.set("nameKanji", "山田太郎");
+    formData.set("nameKana", "ヤマダタロウ");
+    formData.set("email", "yamada@example.com");
+    formData.set("hireDate", "2024-01-01");
+    formData.set("photoS3Key", "employee-photos/new456.jpg");
+
+    // Act
+    const result = await updateEmployeeAction(undefined, formData, "emp-123");
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(employeeService.updateEmployee).toHaveBeenCalledWith("emp-123", {
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: "2024-01-01",
+      mobilePhone: null,
+      photoS3Key: "employee-photos/new456.jpg",
+    });
+    expect(s3Delete.deleteS3Object).toHaveBeenCalledWith(
+      "employee-photos/old123.jpg",
+    );
+  });
+
+  it("写真削除時に古い写真をS3から削除する", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "admin-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "admin-123",
+      role: "admin",
+    } as Profile);
+    vi.mocked(employeeService.getEmployeeById).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: "employee-photos/old123.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(employeeService.updateEmployee).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: null,
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(s3Delete.deleteS3Object).mockResolvedValue(true);
+
+    const formData = new FormData();
+    formData.set("nameKanji", "山田太郎");
+    formData.set("nameKana", "ヤマダタロウ");
+    formData.set("email", "yamada@example.com");
+    formData.set("hireDate", "2024-01-01");
+    formData.set("photoS3Key", "null");
+
+    // Act
+    const result = await updateEmployeeAction(undefined, formData, "emp-123");
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(employeeService.updateEmployee).toHaveBeenCalledWith("emp-123", {
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: "2024-01-01",
+      mobilePhone: null,
+      photoS3Key: null,
+    });
+    expect(s3Delete.deleteS3Object).toHaveBeenCalledWith(
+      "employee-photos/old123.jpg",
+    );
+  });
+
+  it("S3削除失敗時もDB更新は成功する", async () => {
+    // Arrange
+    vi.mocked(auth.getUser).mockResolvedValue({
+      id: "admin-123",
+    } as User);
+    vi.mocked(profileService.getProfileByUserId).mockResolvedValue({
+      userId: "admin-123",
+      role: "admin",
+    } as Profile);
+    vi.mocked(employeeService.getEmployeeById).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: "employee-photos/old123.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(employeeService.updateEmployee).mockResolvedValue({
+      id: "emp-123",
+      employeeNumber: "E001",
+      nameKanji: "山田太郎",
+      nameKana: "ヤマダタロウ",
+      email: "yamada@example.com",
+      hireDate: new Date("2024-01-01"),
+      photoS3Key: "employee-photos/new456.jpg",
+      mobilePhone: null,
+      organizations: [],
+    });
+    vi.mocked(s3Delete.deleteS3Object).mockResolvedValue(false);
+
+    const formData = new FormData();
+    formData.set("nameKanji", "山田太郎");
+    formData.set("nameKana", "ヤマダタロウ");
+    formData.set("email", "yamada@example.com");
+    formData.set("hireDate", "2024-01-01");
+    formData.set("photoS3Key", "employee-photos/new456.jpg");
+
+    // Act
+    const result = await updateEmployeeAction(undefined, formData, "emp-123");
+
+    // Assert (要件3.6準拠: S3削除失敗時もDB更新成功)
+    expect(result.success).toBe(true);
+    expect(s3Delete.deleteS3Object).toHaveBeenCalledWith(
+      "employee-photos/old123.jpg",
+    );
   });
 });
 

@@ -11,6 +11,46 @@ export type ValidationResult = {
 };
 
 /**
+ * 写真ファイルバリデーション入力型
+ */
+export interface ValidatePhotoFileInput {
+  /** ファイルオブジェクト（クライアント側） */
+  file?: File;
+  /** ファイルサイズ（サーバー側） */
+  fileSize?: number;
+  /** MIMEタイプ（サーバー側） */
+  mimeType?: string;
+}
+
+/**
+ * ファイルサイズ制限（10MB）
+ */
+export const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_PHOTO_SIZE_MB = 10;
+
+/**
+ * 許可MIMEタイプ
+ */
+export const ALLOWED_PHOTO_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+
+export type AllowedPhotoMimeType = (typeof ALLOWED_PHOTO_MIME_TYPES)[number];
+
+/**
+ * MIMEタイプから拡張子へのマッピング
+ */
+export const MIME_TO_EXTENSION: Record<AllowedPhotoMimeType, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
+
+/**
  * メールアドレス形式の正規表現
  */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -89,6 +129,83 @@ export function validateEmployeeData(
     if (data.mobilePhone.length > 20) {
       fieldErrors.mobilePhone = ["携帯電話は20文字以内で入力してください"];
     }
+  }
+
+  return {
+    success: Object.keys(fieldErrors).length === 0,
+    fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
+  };
+}
+
+/**
+ * 写真ファイルのバリデーション
+ * @param input - バリデーション対象（FileオブジェクトまたはmimeType+fileSize）
+ * @returns バリデーション結果
+ */
+export function validatePhotoFile(
+  input: ValidatePhotoFileInput,
+): ValidationResult {
+  const fieldErrors: Record<string, string[]> = {};
+
+  // クライアント側バリデーション（Fileオブジェクト）
+  if (input.file) {
+    const { file } = input;
+
+    // MIMEタイプ検証
+    if (!file.type || file.type.trim() === "") {
+      fieldErrors.photo = [
+        "JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です。",
+      ];
+    } else if (
+      !ALLOWED_PHOTO_MIME_TYPES.includes(file.type as AllowedPhotoMimeType)
+    ) {
+      fieldErrors.photo = [
+        "JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です。",
+      ];
+    }
+
+    // ファイルサイズ検証
+    if (file.size === 0) {
+      fieldErrors.photo = [
+        "ファイルが空です。有効な画像ファイルを選択してください。",
+      ];
+    } else if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      fieldErrors.photo = [
+        `ファイルサイズが${MAX_PHOTO_SIZE_MB}MBを超えています。`,
+      ];
+    }
+  }
+  // サーバー側バリデーション（mimeType + fileSize）
+  else if (input.mimeType !== undefined && input.fileSize !== undefined) {
+    const { mimeType, fileSize } = input;
+
+    // MIMEタイプ検証
+    if (!mimeType || mimeType.trim() === "") {
+      fieldErrors.photo = [
+        "JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です。",
+      ];
+    } else if (
+      !ALLOWED_PHOTO_MIME_TYPES.includes(mimeType as AllowedPhotoMimeType)
+    ) {
+      fieldErrors.photo = [
+        "JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です。",
+      ];
+    }
+
+    // ファイルサイズ検証
+    if (fileSize === 0) {
+      fieldErrors.photo = [
+        "ファイルが空です。有効な画像ファイルを選択してください。",
+      ];
+    } else if (fileSize > MAX_PHOTO_SIZE_BYTES) {
+      fieldErrors.photo = [
+        `ファイルサイズが${MAX_PHOTO_SIZE_MB}MBを超えています。`,
+      ];
+    }
+  }
+  // バリデーション入力が不正
+  else {
+    fieldErrors.photo = ["バリデーション入力が不正です。"];
   }
 
   return {

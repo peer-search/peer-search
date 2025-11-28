@@ -20,6 +20,8 @@ export interface CreateEmployeeInput {
   mobilePhone?: string;
   /** 所属組織UUIDの配列（任意） */
   organizationIds?: string[];
+  /** 写真S3キー（任意） */
+  photoS3Key?: string;
 }
 
 /**
@@ -36,6 +38,8 @@ export interface UpdateEmployeeInput {
   hireDate?: string;
   /** 携帯電話（nullで削除） */
   mobilePhone?: string | null;
+  /** 写真S3キー（nullで削除） */
+  photoS3Key?: string | null;
 }
 
 /**
