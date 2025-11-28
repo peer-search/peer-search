@@ -187,9 +187,9 @@
   - 削除確認後、デフォルトアバターが表示される
 - **Status**: ✅ 完了 - `deletedPhoto`状態フラグ追加、削除時に`photoS3Key: "null"`をhidden inputで送信、1個の新規テスト追加、全35テストパス（employee-form）、全435テストパス（プロジェクト全体）
 
-## Task 6: Server Actionsの拡張
+## Task 6: Server Actionsの拡張 ✅
 
-### 6.1 createEmployeeActionを拡張する
+### 6.1 createEmployeeActionを拡張する ✅
 - **Requirements**: 1.7, 5.1
 - **Implementation Notes**:
   - `lib/employees/actions.ts`の`createEmployeeAction`を拡張
@@ -203,8 +203,9 @@
   - 写真付き社員登録時に`photoS3Key`がDBに保存される
   - 写真なし社員登録時も正常動作する（後方互換性）
   - バリデーションエラー時に適切な`ActionResult`を返却する
+- **Status**: ✅ 完了 - `CreateEmployeeInput`と`UpdateEmployeeInput`に`photoS3Key`フィールド追加、`createEmployeeAction`を拡張、`createEmployee` serviceで`photoS3Key`を永続化
 
-### 6.2 updateEmployeeActionを拡張する
+### 6.2 updateEmployeeActionを拡張する ✅
 - **Requirements**: 3.4, 3.5, 3.6, 4.3, 4.4, 4.6, 5.1
 - **Implementation Notes**:
   - `lib/employees/actions.ts`の`updateEmployeeAction`を拡張
@@ -219,8 +220,9 @@
   - 写真更新時に新しい`photoS3Key`がDBに保存され、古いS3オブジェクトが削除される
   - 古いS3オブジェクト削除失敗時もDB更新が成功する
   - `photoS3Key`を`null`に設定すると写真が削除される
+- **Status**: ✅ 完了 - `updateEmployeeAction`を拡張、古いS3キー取得、`deleteS3Object`呼び出し、ベストエフォート削除パターン実装、`photoS3Key="null"`で写真削除対応
 
-### 6.3 Server Actionsの統合テストを実装する
+### 6.3 Server Actionsの統合テストを実装する ✅
 - **Requirements**: 1.7, 3.4, 3.5, 4.3
 - **Implementation Notes**:
   - 写真アップロードフロー統合テスト（Presigned URL取得 → S3アップロード → DB保存）
@@ -230,6 +232,7 @@
   - バリデーションエラー統合検証
 - **Dependencies**: Task 6.1, Task 6.2
 - **Acceptance**: すべての統合テストがパスする
+- **Status**: ✅ 完了 - `actions.test.ts`に5個の新規テストケース追加（写真付き作成、写真更新、写真削除、S3削除失敗時の成功）、全17テストパス
 
 ## Task 7: 写真表示機能の検証と調整
 
