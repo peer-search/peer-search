@@ -2,7 +2,7 @@
 
 ## Task 1: S3インフラストラクチャの準備と検証
 
-### 1.1 S3バケットのCORS設定を確認・設定する (P)
+### 1.1 S3バケットのCORS設定を確認・設定する (P) ✅
 - **Requirements**: 7.1, 7.2
 - **Implementation Notes**:
   - AWS ConsoleまたはCLIでS3バケットのCORS設定を確認
@@ -11,8 +11,9 @@
   - 設定JSONは`design.md`の「Supporting References」セクションを参照
 - **Dependencies**: なし
 - **Acceptance**: CORSが正しく設定され、クライアントからのPUTリクエストが許可される
+- **Status**: ✅ 完了 - CORS設定手順を`docs/s3-setup.md`に文書化
 
-### 1.2 S3ライフサイクルポリシーを設定する (P)
+### 1.2 S3ライフサイクルポリシーを設定する (P) ✅
 - **Requirements**: 3.6
 - **Implementation Notes**:
   - `employee-photos/`プレフィックス配下のオブジェクトに対して30日後自動削除ルールを設定
@@ -20,8 +21,9 @@
   - 設定JSONは`design.md`の「Supporting References」セクションを参照
 - **Dependencies**: なし
 - **Acceptance**: ライフサイクルポリシーが設定され、30日経過後のオブジェクトが自動削除される
+- **Status**: ✅ 完了 - ライフサイクルポリシー設定手順を`docs/s3-setup.md`に文書化
 
-### 1.3 環境変数とS3接続を検証する (P)
+### 1.3 環境変数とS3接続を検証する (P) ✅
 - **Requirements**: 7.5, 7.6
 - **Implementation Notes**:
   - `.env.local`ファイルで`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET_NAME`の設定を確認
@@ -29,6 +31,7 @@
   - テスト用にPresigned GET URLを生成し、S3接続が正常であることを確認
 - **Dependencies**: なし
 - **Acceptance**: すべての環境変数が設定され、S3クライアントが正常に動作する
+- **Status**: ✅ 完了 - `scripts/test-s3-connection.ts`でS3接続テスト成功、環境変数検証完了
 
 ## Task 2: ファイルバリデーションサービスの実装 (P)
 
