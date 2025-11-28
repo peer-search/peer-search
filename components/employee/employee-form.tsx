@@ -69,12 +69,16 @@ export function EmployeeForm({
 }: EmployeeFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // 写真アップロード状態管理
-  const [_selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedS3Key, setUploadedS3Key] = useState<string | null>(null);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
 
   // Server Actionの選択 - 編集と新規で分ける
   const [createState, createFormAction, createIsPending] = useActionState(
@@ -165,9 +169,97 @@ export function EmployeeForm({
     }
   };
 
+  // S3アップロード処理
+  const uploadToS3 = async (): Promise<string | null> => {
+    if (!selectedFile) return null;
+
+    setPhotoError(null);
+    setUploading(true);
+
+    try {
+      // 1. Presigned PUT URLを取得
+      const presignResponse = await fetch("/api/s3/upload/presign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+        }),
+      });
+
+      if (!presignResponse.ok) {
+        await presignResponse.json(); // エラーレスポンスを消費
+        if (presignResponse.status === 401) {
+          setPhotoError("認証されていません。ログインしてください。");
+        } else if (presignResponse.status === 403) {
+          setPhotoError("この操作を実行する権限がありません。");
+        } else {
+          setPhotoError(
+            "サーバーエラーが発生しました。しばらくしてからもう一度お試しください。",
+          );
+        }
+        setUploading(false);
+        return null;
+      }
+
+      const { uploadUrl, s3Key } = await presignResponse.json();
+
+      // 2. S3へ直接アップロード
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedFile.type,
+        },
+        body: selectedFile,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("S3 upload failed");
+      }
+
+      // 3. アップロード成功
+      setUploading(false);
+      return s3Key;
+    } catch (error) {
+      console.error("Upload error:", error);
+      setPhotoError(
+        "ネットワークエラーが発生しました。もう一度お試しください。",
+      );
+      setUploading(false);
+      return null;
+    }
+  };
+
+  // 保存ボタンクリックハンドラー
+  const handleSaveClick = async () => {
+    // 写真が選択されている場合、まずS3へアップロード
+    if (selectedFile && !uploadedS3Key) {
+      const s3Key = await uploadToS3();
+      if (s3Key) {
+        setUploadedS3Key(s3Key);
+        // S3キーを設定したら自動的にフォーム送信
+        setPendingSubmit(true);
+      }
+      // アップロード失敗時は何もしない（エラーメッセージが表示される）
+    } else {
+      // 写真が選択されていない、またはすでにアップロード済みの場合は直接フォーム送信
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  // uploadedS3Keyが設定されたら自動的にフォーム送信
+  useEffect(() => {
+    if (pendingSubmit && uploadedS3Key && formRef.current) {
+      formRef.current.requestSubmit();
+      setPendingSubmit(false);
+    }
+  }, [pendingSubmit, uploadedS3Key]);
+
   return (
     <>
-      <form action={formAction} className="space-y-6">
+      <form ref={formRef} action={formAction} className="space-y-6">
         {/* 社員番号 */}
         <div>
           <Label htmlFor="employeeNumber">
@@ -368,6 +460,11 @@ export function EmployeeForm({
           </div>
         </div>
 
+        {/* Hidden input for photoS3Key */}
+        {uploadedS3Key && (
+          <input type="hidden" name="photoS3Key" value={uploadedS3Key} />
+        )}
+
         {/* 全体エラー */}
         {state.errors && state.errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -388,8 +485,12 @@ export function EmployeeForm({
 
         {/* アクション */}
         <div className="flex gap-3">
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "保存中..." : "保存"}
+          <Button
+            type="button"
+            disabled={isPending || uploading}
+            onClick={handleSaveClick}
+          >
+            {isPending || uploading ? "保存中..." : "保存"}
           </Button>
           <Button type="button" variant="outline" onClick={handleCancel}>
             キャンセル

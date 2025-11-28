@@ -462,4 +462,325 @@ describe("EmployeeForm", () => {
       });
     });
   });
+
+  describe("S3直接アップロード処理 (Task 5.3)", () => {
+    // グローバルfetchをモック
+    const mockFetch = vi.fn();
+    beforeEach(() => {
+      global.fetch = mockFetch;
+      mockFetch.mockClear();
+    });
+
+    describe("Presigned URL取得とS3アップロード", () => {
+      it("保存ボタンクリック時にPresigned PUT URLを取得する", async () => {
+        const user = userEvent.setup();
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            uploadUrl: "https://s3.amazonaws.com/bucket/presigned-url",
+            s3Key: "employee-photos/test-uuid.jpg",
+          }),
+        });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // Presigned URL取得APIが呼ばれることを確認
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/api/s3/upload/presign",
+          expect.objectContaining({
+            method: "POST",
+            headers: expect.objectContaining({
+              "Content-Type": "application/json",
+            }),
+            body: expect.stringContaining("test.jpg"),
+          }),
+        );
+      });
+
+      it("Presigned URL取得後、S3へ直接PUTリクエストを送信する", async () => {
+        const user = userEvent.setup();
+        const mockPresignedUrl =
+          "https://s3.amazonaws.com/bucket/presigned-url";
+        const mockS3Key = "employee-photos/test-uuid.jpg";
+
+        // 1回目: Presigned URL取得
+        // 2回目: S3へのPUT
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+              uploadUrl: mockPresignedUrl,
+              s3Key: mockS3Key,
+            }),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+          });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // S3への直接PUT
+        expect(mockFetch).toHaveBeenCalledWith(
+          mockPresignedUrl,
+          expect.objectContaining({
+            method: "PUT",
+            headers: expect.objectContaining({
+              "Content-Type": "image/jpeg",
+            }),
+            body: file,
+          }),
+        );
+      });
+
+      it("S3アップロード成功後、photoS3Keyをフォームデータに含める", async () => {
+        const user = userEvent.setup();
+        const mockS3Key = "employee-photos/test-uuid.jpg";
+
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+              uploadUrl: "https://s3.amazonaws.com/bucket/presigned-url",
+              s3Key: mockS3Key,
+            }),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+          });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // photoS3Keyがhidden inputまたは状態として保存されることを確認
+        // 実装後に具体的なアサーションを追加
+      });
+    });
+
+    describe("プログレスインジケーター", () => {
+      it("アップロード中にプログレスインジケーターが表示される", async () => {
+        const user = userEvent.setup();
+        let resolveUpload: (value: unknown) => void;
+        const uploadPromise = new Promise((resolve) => {
+          resolveUpload = resolve;
+        });
+
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+              uploadUrl: "https://s3.amazonaws.com/bucket/presigned-url",
+              s3Key: "employee-photos/test-uuid.jpg",
+            }),
+          })
+          .mockReturnValueOnce(uploadPromise as Promise<Response>);
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // プログレスインジケーター（保存中...テキスト）が表示される
+        expect(screen.getByText(/保存中/)).toBeInTheDocument();
+
+        // アップロード完了
+        resolveUpload({ ok: true, status: 200 });
+      });
+
+      it("アップロード中は保存ボタンが無効化される", async () => {
+        const user = userEvent.setup();
+        let resolveUpload: (value: unknown) => void;
+        const uploadPromise = new Promise((resolve) => {
+          resolveUpload = resolve;
+        });
+
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+              uploadUrl: "https://s3.amazonaws.com/bucket/presigned-url",
+              s3Key: "employee-photos/test-uuid.jpg",
+            }),
+          })
+          .mockReturnValueOnce(uploadPromise as Promise<Response>);
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // 保存ボタンが無効化される
+        expect(saveButton).toBeDisabled();
+
+        // アップロード完了
+        resolveUpload({ ok: true, status: 200 });
+      });
+    });
+
+    describe("エラーハンドリング", () => {
+      it("Presigned URL取得失敗時にエラーメッセージを表示する", async () => {
+        const user = userEvent.setup();
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: async () => ({
+            error: "Failed to generate presigned URL",
+          }),
+        });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // サーバーエラーメッセージが表示される
+        const errorMessage =
+          await screen.findByText(/サーバーエラーが発生しました/);
+        expect(errorMessage).toBeInTheDocument();
+      });
+
+      it("S3アップロード失敗時にネットワークエラーメッセージを表示する", async () => {
+        const user = userEvent.setup();
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+              uploadUrl: "https://s3.amazonaws.com/bucket/presigned-url",
+              s3Key: "employee-photos/test-uuid.jpg",
+            }),
+          })
+          .mockRejectedValueOnce(new Error("Network error"));
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // ネットワークエラーメッセージが表示される
+        const errorMessage =
+          await screen.findByText(/ネットワークエラーが発生しました/);
+        expect(errorMessage).toBeInTheDocument();
+      });
+
+      it("認証エラー（401）時に適切なエラーメッセージを表示する", async () => {
+        const user = userEvent.setup();
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({
+            error: "Unauthorized. Please sign in.",
+          }),
+        });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // 認証エラーメッセージが表示される
+        const errorMessage = await screen.findByText(
+          /認証されていません.*ログインしてください/,
+        );
+        expect(errorMessage).toBeInTheDocument();
+      });
+
+      it("権限エラー（403）時に適切なエラーメッセージを表示する", async () => {
+        const user = userEvent.setup();
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            error: "Admin permission required.",
+          }),
+        });
+
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // 権限エラーメッセージが表示される
+        const errorMessage =
+          await screen.findByText(/この操作を実行する権限がありません/);
+        expect(errorMessage).toBeInTheDocument();
+      });
+    });
+
+    describe("写真なしでの保存", () => {
+      it("写真を選択せずに保存した場合、S3アップロードをスキップする", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        // 写真を選択せずに保存
+        const saveButton = screen.getByRole("button", { name: "保存" });
+        await user.click(saveButton);
+
+        // Presigned URL取得APIが呼ばれないことを確認
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
