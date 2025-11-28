@@ -79,6 +79,7 @@ export function EmployeeForm({
   const [uploading, setUploading] = useState(false);
   const [uploadedS3Key, setUploadedS3Key] = useState<string | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
+  const [deletedPhoto, setDeletedPhoto] = useState(false);
 
   // Server Actionの選択 - 編集と新規で分ける
   const [createState, createFormAction, createIsPending] = useActionState(
@@ -152,6 +153,8 @@ export function EmployeeForm({
     setShowDeleteDialog(false);
     setSelectedFile(null);
     setPreviewUrl(null);
+    setUploadedS3Key(null);
+    setDeletedPhoto(true); // 写真削除フラグを立てる
     // ファイルinputをリセット
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -463,6 +466,10 @@ export function EmployeeForm({
         {/* Hidden input for photoS3Key */}
         {uploadedS3Key && (
           <input type="hidden" name="photoS3Key" value={uploadedS3Key} />
+        )}
+        {/* Hidden input for deleted photo - send "null" string to Server Action */}
+        {deletedPhoto && !uploadedS3Key && (
+          <input type="hidden" name="photoS3Key" value="null" />
         )}
 
         {/* 全体エラー */}

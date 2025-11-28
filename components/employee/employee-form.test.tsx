@@ -329,6 +329,39 @@ describe("EmployeeForm", () => {
         });
         expect(uploadButton).toBeInTheDocument();
       });
+
+      it("削除確認後、photoS3Keyをnullに設定して保存時にServer Actionに送信する (Task 5.4)", async () => {
+        const user = userEvent.setup();
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const deleteButton = screen.getByRole("button", {
+          name: /写真を削除/,
+        });
+        await user.click(deleteButton);
+
+        // 確認ダイアログで削除を確定
+        const confirmButton = await screen.findByRole("button", {
+          name: /削除する/,
+        });
+        await user.click(confirmButton);
+
+        // 保存ボタンをクリック
+        const saveButton = screen.getByRole("button", { name: /保存/ });
+        await user.click(saveButton);
+
+        // photoS3Key: "null"がhidden inputとして存在することを確認
+        // (実際のフォーム送信ではnull文字列として送信される)
+        const hiddenInput = document.querySelector(
+          'input[name="photoS3Key"][value="null"]',
+        );
+        expect(hiddenInput).toBeInTheDocument();
+      });
     });
   });
 
