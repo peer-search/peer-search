@@ -1,0 +1,26 @@
+{
+  "feature_name": "organization-hierarchy-view",
+  "created_at": "2025-01-21T05:30:00Z",
+  "updated_at": "2025-01-21T14:30:00Z",
+  "language": "ja",
+  "phase": "implementation-completed",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    },
+    "implementation": {
+      "completed": true,
+      "completion_date": "2025-01-21T14:30:00Z"
+    }
+  },
+  "ready_for_implementation": true
+}

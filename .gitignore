@@ -33,9 +33,18 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# claude local settings
+.claude/*local.json
+
+# serena
+.serena/
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright mcp
+.playwright-mcp/

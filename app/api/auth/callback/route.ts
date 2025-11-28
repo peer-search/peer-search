@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase-auth/server";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase-auth/server";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
