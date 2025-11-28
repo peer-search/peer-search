@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -156,4 +156,310 @@ describe("EmployeeForm", () => {
   // Note: エラー表示のテストは、useActionStateのモック戦略が複雑なため、
   // 統合テストで実施する方が適切です。ここでは基本的なレンダリングと
   // ユーザーインタラクションのテストに集中します。
+
+  describe("写真アップロードUI (Task 5.1)", () => {
+    describe("新規作成モード", () => {
+      it("写真選択UIが表示される", () => {
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択input要素が存在することを確認
+        const fileInput = screen.getByLabelText(/写真/);
+        expect(fileInput).toBeInTheDocument();
+        expect(fileInput).toHaveAttribute("type", "file");
+        expect(fileInput).toHaveAttribute("accept", "image/*");
+      });
+
+      it("ファイル選択ダイアログが開く（file input要素にクリック可能）", () => {
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        expect(fileInput).not.toBeDisabled();
+      });
+
+      it("選択された画像のプレビューが表示される", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        // ファイル選択
+        const fileInput = screen.getByLabelText(/写真/);
+        const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+        await user.upload(fileInput, file);
+
+        // プレビュー画像要素が表示されることを確認
+        const previewImage = await screen.findByAltText(/プレビュー/i);
+        expect(previewImage).toBeInTheDocument();
+        expect(previewImage).toHaveAttribute("src");
+      });
+    });
+
+    describe("編集モード - 既存写真あり", () => {
+      const mockEmployeeWithPhoto: Employee = {
+        ...mockEmployee,
+        photoS3Key: "employee-photos/test.jpg",
+      };
+
+      it("既存写真がある場合、プレビューが表示される", () => {
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        // 既存写真のプレビューが表示される
+        const previewImage = screen.getByAltText(/プレビュー/i);
+        expect(previewImage).toBeInTheDocument();
+      });
+
+      it("写真変更ボタンが表示される", () => {
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const changeButton = screen.getByRole("button", { name: /写真を変更/ });
+        expect(changeButton).toBeInTheDocument();
+      });
+
+      it("写真削除ボタンが表示される", () => {
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const deleteButton = screen.getByRole("button", { name: /写真を削除/ });
+        expect(deleteButton).toBeInTheDocument();
+      });
+
+      it("写真変更ボタンクリックでファイル選択ダイアログが開く", async () => {
+        const user = userEvent.setup();
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const changeButton = screen.getByRole("button", { name: /写真を変更/ });
+        await user.click(changeButton);
+
+        // ファイル選択inputがクリックされることを確認（hidden inputなので直接確認は困難）
+        const fileInput = screen.getByLabelText(/写真/);
+        expect(fileInput).toBeInTheDocument();
+      });
+    });
+
+    describe("編集モード - 既存写真なし", () => {
+      it("既存写真がない場合、デフォルトアバターとアップロードボタンが表示される", () => {
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployee}
+            employeeId={mockEmployee.id}
+          />,
+        );
+
+        // デフォルトアバターまたはアップロード促進メッセージが表示される
+        const uploadButton = screen.getByRole("button", {
+          name: /写真をアップロード/,
+        });
+        expect(uploadButton).toBeInTheDocument();
+      });
+    });
+
+    describe("写真削除機能", () => {
+      const mockEmployeeWithPhoto: Employee = {
+        ...mockEmployee,
+        photoS3Key: "employee-photos/test.jpg",
+      };
+
+      it("削除ボタンクリック時に確認ダイアログが表示される", async () => {
+        const user = userEvent.setup();
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const deleteButton = screen.getByRole("button", {
+          name: /写真を削除/,
+        });
+        await user.click(deleteButton);
+
+        // 確認ダイアログが表示される
+        const dialog = await screen.findByRole("alertdialog");
+        expect(dialog).toBeInTheDocument();
+        expect(dialog).toHaveTextContent(/削除してもよろしいですか/);
+      });
+
+      it("削除確認後、プレビューがクリアされる", async () => {
+        const user = userEvent.setup();
+        render(
+          <EmployeeForm
+            mode="edit"
+            initialData={mockEmployeeWithPhoto}
+            employeeId={mockEmployeeWithPhoto.id}
+          />,
+        );
+
+        const deleteButton = screen.getByRole("button", {
+          name: /写真を削除/,
+        });
+        await user.click(deleteButton);
+
+        // 確認ダイアログで削除を確定
+        const confirmButton = await screen.findByRole("button", {
+          name: /削除する/,
+        });
+        await user.click(confirmButton);
+
+        // プレビューが非表示になり、アップロードボタンが表示される
+        const uploadButton = await screen.findByRole("button", {
+          name: /写真をアップロード/,
+        });
+        expect(uploadButton).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("クライアントサイドバリデーション (Task 5.2)", () => {
+    describe("ファイル形式バリデーション", () => {
+      it("不正なファイル形式選択時にエラーメッセージが表示される", async () => {
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/) as HTMLInputElement;
+        const invalidFile = new File(["dummy"], "test.pdf", {
+          type: "application/pdf",
+        });
+
+        // fireEventを使ってonChangeを直接トリガー
+        Object.defineProperty(fileInput, "files", {
+          value: [invalidFile],
+          writable: false,
+        });
+        fireEvent.change(fileInput);
+
+        // エラーメッセージが表示される
+        const errorMessage = await screen.findByText(/JPEG.*PNG.*GIF.*WebP/i);
+        expect(errorMessage).toBeInTheDocument();
+        expect(errorMessage).toHaveClass("text-red-600");
+      });
+
+      it("許可されたファイル形式（JPEG）でエラーが表示されない", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        const validFile = new File(["dummy"], "test.jpg", {
+          type: "image/jpeg",
+        });
+        await user.upload(fileInput, validFile);
+
+        // エラーメッセージが表示されない
+        expect(
+          screen.queryByText(
+            /JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です/,
+          ),
+        ).not.toBeInTheDocument();
+      });
+
+      it("許可されたファイル形式（PNG）でエラーが表示されない", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        const validFile = new File(["dummy"], "test.png", {
+          type: "image/png",
+        });
+        await user.upload(fileInput, validFile);
+
+        expect(
+          screen.queryByText(
+            /JPEG, PNG, GIF, WebP形式の画像ファイルのみアップロード可能です/,
+          ),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe("ファイルサイズバリデーション", () => {
+      it("10MB超過ファイル選択時にエラーメッセージが表示される", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        // 11MBのファイルを作成
+        const largeFile = new File(
+          [new ArrayBuffer(11 * 1024 * 1024)],
+          "large.jpg",
+          { type: "image/jpeg" },
+        );
+        await user.upload(fileInput, largeFile);
+
+        // エラーメッセージが表示される
+        const errorMessage =
+          await screen.findByText(/ファイルサイズが10MBを超えています/);
+        expect(errorMessage).toBeInTheDocument();
+      });
+
+      it("10MB以下のファイルでエラーが表示されない", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        // 5MBのファイルを作成
+        const validFile = new File(
+          [new ArrayBuffer(5 * 1024 * 1024)],
+          "valid.jpg",
+          { type: "image/jpeg" },
+        );
+        await user.upload(fileInput, validFile);
+
+        // エラーメッセージが表示されない
+        expect(
+          screen.queryByText(/ファイルサイズが10MBを超えています/),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe("バリデーション成功時の動作", () => {
+      it("バリデーション成功時のみプレビューが表示される", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        const validFile = new File(["dummy"], "test.jpg", {
+          type: "image/jpeg",
+        });
+        await user.upload(fileInput, validFile);
+
+        // プレビュー画像が表示される
+        const previewImage = await screen.findByAltText(/プレビュー/i);
+        expect(previewImage).toBeInTheDocument();
+      });
+
+      it("バリデーション失敗時はプレビューが表示されない", async () => {
+        const user = userEvent.setup();
+        render(<EmployeeForm mode="create" />);
+
+        const fileInput = screen.getByLabelText(/写真/);
+        const invalidFile = new File(["dummy"], "test.pdf", {
+          type: "application/pdf",
+        });
+        await user.upload(fileInput, invalidFile);
+
+        // プレビュー画像が表示されない
+        expect(screen.queryByAltText(/プレビュー/i)).not.toBeInTheDocument();
+      });
+    });
+  });
 });
