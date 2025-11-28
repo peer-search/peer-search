@@ -1141,6 +1141,316 @@ describe("searchEmployees", () => {
     // Verify empty string is set for non-existent organization
     expect(result[0].organizations[0].organizationPath).toBe("");
   });
+
+  describe("ソート機能", () => {
+    it("氏名かなで昇順ソートされる", async () => {
+      // Setup mock data: 3 employees with different name_kana
+      const mockRows = [
+        {
+          id: "emp1",
+          employeeNumber: "E001",
+          nameKanji: "山田太郎",
+          nameKana: "やまだたろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "yamada@example.com",
+          hireDate: "2020-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp2",
+          employeeNumber: "E002",
+          nameKanji: "佐藤花子",
+          nameKana: "さとうはなこ",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "sato@example.com",
+          hireDate: "2021-01-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp3",
+          employeeNumber: "E003",
+          nameKanji: "田中一郎",
+          nameKana: "たなかいちろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "tanaka@example.com",
+          hireDate: "2019-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+      ];
+
+      // Mock db.select chain - create a proper thenable mock
+      const thenableMock = Object.assign(Promise.resolve(mockRows), {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        $dynamic: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+      });
+
+      vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+      // Mock db.execute for buildOrganizationPathsBatch
+      (
+        vi.mocked(db.execute).mockResolvedValue as unknown as (
+          value: unknown,
+        ) => void
+      )([]);
+
+      // Act
+      const result = await searchEmployees({
+        sort: "name_kana",
+        order: "asc",
+      });
+
+      // Assert
+      expect(result).toHaveLength(3);
+      // Verify orderBy was called with the correct arguments
+      expect(thenableMock.orderBy).toHaveBeenCalled();
+      // Results should be in ascending order by name_kana (mocked data returned as is)
+      expect(result[0].nameKana).toBe("やまだたろう");
+      expect(result[1].nameKana).toBe("さとうはなこ");
+      expect(result[2].nameKana).toBe("たなかいちろう");
+    });
+
+    it("社員番号で降順ソートされる", async () => {
+      // Setup mock data: 3 employees with different employee_number
+      const mockRows = [
+        {
+          id: "emp3",
+          employeeNumber: "E003",
+          nameKanji: "田中一郎",
+          nameKana: "たなかいちろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "tanaka@example.com",
+          hireDate: "2019-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp2",
+          employeeNumber: "E002",
+          nameKanji: "佐藤花子",
+          nameKana: "さとうはなこ",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "sato@example.com",
+          hireDate: "2021-01-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp1",
+          employeeNumber: "E001",
+          nameKanji: "山田太郎",
+          nameKana: "やまだたろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "yamada@example.com",
+          hireDate: "2020-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+      ];
+
+      // Mock db.select chain - create a proper thenable mock
+      const thenableMock = Object.assign(Promise.resolve(mockRows), {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        $dynamic: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+      });
+
+      vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+      // Mock db.execute for buildOrganizationPathsBatch
+      (
+        vi.mocked(db.execute).mockResolvedValue as unknown as (
+          value: unknown,
+        ) => void
+      )([]);
+
+      // Act
+      const result = await searchEmployees({
+        sort: "employee_number",
+        order: "desc",
+      });
+
+      // Assert
+      expect(result).toHaveLength(3);
+      // Verify orderBy was called with the correct arguments
+      expect(thenableMock.orderBy).toHaveBeenCalled();
+      // Results should be in descending order by employee_number (mocked data returned as is)
+      expect(result[0].employeeNumber).toBe("E003");
+      expect(result[1].employeeNumber).toBe("E002");
+      expect(result[2].employeeNumber).toBe("E001");
+    });
+
+    it("入社日で昇順ソートされる", async () => {
+      // Setup mock data: 3 employees with different hire_date
+      const mockRows = [
+        {
+          id: "emp3",
+          employeeNumber: "E003",
+          nameKanji: "田中一郎",
+          nameKana: "たなかいちろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "tanaka@example.com",
+          hireDate: "2019-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp1",
+          employeeNumber: "E001",
+          nameKanji: "山田太郎",
+          nameKana: "やまだたろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "yamada@example.com",
+          hireDate: "2020-04-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+        {
+          id: "emp2",
+          employeeNumber: "E002",
+          nameKanji: "佐藤花子",
+          nameKana: "さとうはなこ",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "sato@example.com",
+          hireDate: "2021-01-01",
+          organizationId: null,
+          organizationName: null,
+          position: null,
+        },
+      ];
+
+      // Mock db.select chain - create a proper thenable mock
+      const thenableMock = Object.assign(Promise.resolve(mockRows), {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        $dynamic: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+      });
+
+      vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+      // Mock db.execute for buildOrganizationPathsBatch
+      (
+        vi.mocked(db.execute).mockResolvedValue as unknown as (
+          value: unknown,
+        ) => void
+      )([]);
+
+      // Act
+      const result = await searchEmployees({
+        sort: "hire_date",
+        order: "asc",
+      });
+
+      // Assert
+      expect(result).toHaveLength(3);
+      // Verify orderBy was called with the correct arguments
+      expect(thenableMock.orderBy).toHaveBeenCalled();
+      // Results should be in ascending order by hire_date (mocked data returned as is)
+      expect(result[0].hireDate).toEqual(new Date("2019-04-01"));
+      expect(result[1].hireDate).toEqual(new Date("2020-04-01"));
+      expect(result[2].hireDate).toEqual(new Date("2021-01-01"));
+    });
+
+    it("検索条件とソート条件を組み合わせて使用できる", async () => {
+      // Setup mock data: employees matching search criteria, sorted
+      const mockRows = [
+        {
+          id: "emp2",
+          employeeNumber: "E002",
+          nameKanji: "佐藤花子",
+          nameKana: "さとうはなこ",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "sato@example.com",
+          hireDate: "2021-01-01",
+          organizationId: "org1",
+          organizationName: "開発部",
+          position: "主任",
+        },
+        {
+          id: "emp1",
+          employeeNumber: "E001",
+          nameKanji: "山田太郎",
+          nameKana: "やまだたろう",
+          photoS3Key: null,
+          mobilePhone: null,
+          email: "yamada@example.com",
+          hireDate: "2020-04-01",
+          organizationId: "org1",
+          organizationName: "開発部",
+          position: "課長",
+        },
+      ];
+
+      // Mock db.select chain - create a proper thenable mock
+      const thenableMock = Object.assign(Promise.resolve(mockRows), {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        $dynamic: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+      });
+
+      vi.mocked(db.select).mockReturnValue(thenableMock as MockChain);
+
+      // Mock db.execute for buildOrganizationPathsBatch
+      (
+        vi.mocked(db.execute).mockResolvedValue as unknown as (
+          value: unknown,
+        ) => void
+      )([
+        {
+          organization_id: "org1",
+          path: "ABC株式会社 技術本部 開発部",
+        },
+      ]);
+
+      // Act - Combine search conditions with sort
+      const result = await searchEmployees({
+        orgId: "org1",
+        hireYear: 2020,
+        sort: "hire_date",
+        order: "desc",
+      });
+
+      // Assert
+      expect(result).toHaveLength(2);
+      // Verify where and orderBy were called
+      expect(thenableMock.where).toHaveBeenCalled();
+      expect(thenableMock.orderBy).toHaveBeenCalled();
+      // Results should be filtered by orgId and hireYear, sorted by hire_date descending
+      expect(result[0].hireDate).toEqual(new Date("2021-01-01"));
+      expect(result[1].hireDate).toEqual(new Date("2020-04-01"));
+      expect(result[0].organizations[0].organizationId).toBe("org1");
+      expect(result[1].organizations[0].organizationId).toBe("org1");
+    });
+  });
 });
 
 describe("buildOrganizationPathsBatch", () => {
